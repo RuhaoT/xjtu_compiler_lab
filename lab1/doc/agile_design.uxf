@@ -1,22 +1,20 @@
-<diagram program="umletino" version="15.1"><zoom_level>12</zoom_level><help_text>**YAML Config
+<diagram program="umletino" version="15.1"><zoom_level>11</zoom_level><help_text>**YAML Config
 Frontend**
-</help_text><element><id>UMLClass</id><coordinates><x>348</x><y>60</y><w>252</w><h>144</h></coordinates><panel_attributes>Top-Level API
+</help_text><element><id>UMLClass</id><coordinates><x>308</x><y>99</y><w>231</w><h>132</h></coordinates><panel_attributes>Top-Level API
 --
 +LoadDFAConfig()
 +SimString()
-+FetchAcceptString(length: int)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>144</x><y>120</y><w>228</w><h>156</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;110;10;10;170;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>96</x><y>252</y><w>180</w><h>120</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt;
++FetchAcceptString(length: int)
+...</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>121</x><y>154</y><w>209</w><h>143</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;110;10;10;170;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>77</x><y>275</y><w>165</w><h>110</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt;
 **Config Frontend**
 --
 +LoadConfig()
 +CheckConfig()
-+ConstructDFA()</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>96</x><y>444</y><w>180</w><h>48</h></coordinates><panel_attributes>**YAML Config**
-**Frontend**</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>168</x><y>360</y><w>36</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>UMLClass</id><coordinates><x>672</x><y>252</y><w>180</w><h>120</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt;
++ConstructDFA()
+...</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>77</x><y>451</y><w>165</w><h>44</h></coordinates><panel_attributes>**YAML Config**
+**Frontend**</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>143</x><y>374</y><w>33</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>UMLClass</id><coordinates><x>605</x><y>275</y><w>165</w><h>110</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt;
 **DFA Simulator**
 --
 +SimSingleString()
-+FetchAllAcceptString()</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>384</x><y>276</y><w>180</w><h>120</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt;
-**String Processing**
---
-+GetValidStringInput()
-+PrettyPrintStringSet()</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>588</x><y>120</y><w>192</w><h>156</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>140;110;140;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>456</x><y>192</y><w>36</w><h>108</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;70;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>672</x><y>444</y><w>180</w><h>36</h></coordinates><panel_attributes>**Standard DFA**</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>756</x><y>360</y><w>36</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>Relation</id><coordinates><x>456</x><y>384</y><w>36</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element><element><id>UMLClass</id><coordinates><x>384</x><y>468</y><w>180</w><h>60</h></coordinates><panel_attributes>**Linux Bash String**
-**Processor**</panel_attributes><additional_attributes></additional_attributes></element></diagram>
++FetchAllAcceptString()
+...</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>528</x><y>154</y><w>176</w><h>143</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>140;110;140;10;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>605</x><y>451</y><w>165</w><h>33</h></coordinates><panel_attributes>**Standard DFA**</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>682</x><y>374</y><w>33</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;10;70</additional_attributes></element></diagram>
