@@ -1,0 +1,7 @@
+regexps:
+- regexp: "[a-z]+{D}*"
+  token_type: "IDENTIFIER"
+- regexp: "[a-z]+"
+  token_type: "NUMBER"
+- regexp: "D"
+  token_type: "OPERATOR"
