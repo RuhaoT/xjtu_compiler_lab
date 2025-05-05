@@ -1,1 +1,1 @@
-while \(true\) \{int a\=0\;\}
+int b\= 2\; while \(true\) \{int a\=0\; int b\=b*2.8\;\}
