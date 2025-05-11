@@ -18,10 +18,230 @@ ItemSetToParsingTable::ItemSetToParsingTable(const lr_parsing_model::ItemSet &it
     {
         generate_nfa();
         generate_dfa();
+        build_parsing_table();
     }
     catch (const std::exception &e)
     {
         std::string error_msg = "Error during ItemSetToParsingTable construction: " + std::string(e.what());
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
+    }
+}
+
+lr_parsing_model::LRParsingTable ItemSetToParsingTable::build_parsing_table()
+{
+    try
+    {
+        // check for prerequisites: itemset, nfa, dfa, and their mappings
+        if (item_set.items.empty())
+        {
+            std::string error_msg = "Error: Item set is empty";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        if (nfa.states.empty())
+        {
+            std::string error_msg = "Error: NFA is empty";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        if (dfa.states_set.empty())
+        {
+            std::string error_msg = "Error: DFA is empty";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        if (item_set_nfa_mapping.item_set_to_nfa_state.empty())
+        {
+            std::string error_msg = "Error: Item set to NFA state mapping is empty";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        if (item_set_dfa_mapping.item_set_to_dfa_state.empty())
+        {
+            std::string error_msg = "Error: Item set to DFA state mapping is empty";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+
+        // build the parsing table
+        lr_parsing_model::LRParsingTable new_parsing_table;
+        // 1. add all symbols from the ItemSet and all states from the DFA to the parsing table
+        for (const auto &symbol : item_set.symbol_set)
+        {
+            new_parsing_table.all_symbols.insert(symbol);
+        }
+        for (const auto &state : dfa.states_set)
+        {
+            new_parsing_table.all_states.insert(state);
+        }
+        // 2. find all shift actions and goto states
+        int added_shift_actions = 0;
+        int added_goto_states = 0;
+        for (const auto &state_transitions : dfa.transitions)
+        {
+            const std::string &state = state_transitions.first;
+            const auto &transitions = state_transitions.second;
+            // iterate over all transitions for the current state
+            for (const auto &transition : transitions)
+            {
+
+                std::string input_char = transition.first;
+                std::string next_state = transition.second;
+                spdlog::debug("Processing transition: {} --{}--> {}", state, input_char, next_state);
+                cfg_model::symbol corresponding_symbol = item_set_dfa_mapping.dfa_character_to_item_set_symbol.at(input_char);
+                // get all the items in the next state
+                auto items_in_next_state = item_set_dfa_mapping.dfa_state_to_item_set.at(next_state);
+                spdlog::debug("Item number in next state for this transition: {}", items_in_next_state.size());
+                // iterate over all items in the next state
+                for (const auto &item : items_in_next_state)
+                {
+                    // for terminal symbols, add a shift action as long as the item is not the end item
+                    if (corresponding_symbol.is_terminal)
+                    {
+                        if (item == item_set.end_item)
+                        {
+                            // skip the end item and accepting states
+                            continue;
+                        }
+                        lr_parsing_model::Action shift_action;
+                        shift_action.action_type = "shift";
+                        shift_action.target_state = next_state;
+                        // add the action to the parsing table
+                        bool added = new_parsing_table.add_action(state, corresponding_symbol, shift_action);
+                        if (added) added_shift_actions++;
+                    }
+                    // for non-terminals, always add a goto state
+                    else
+                    {
+                        // add a goto state
+                        bool added = new_parsing_table.add_goto(state, corresponding_symbol, next_state);
+                        if (added) added_goto_states++;
+                    }
+                }
+            }
+        }
+        spdlog::debug("Added {} shift actions and {} goto states to the parsing table", added_shift_actions, added_goto_states);
+        // 3. find all reduce actions
+        // iterate over all accepting states in the DFA
+        int added_reduce_actions = 0;
+        for (const auto &accepting_state : dfa.accepting_states)
+        {
+            // get all items in the accepting state
+            auto items_in_accepting_state = item_set_dfa_mapping.dfa_state_to_item_set.at(accepting_state);
+            // iterate over all items in the accepting state
+            for (const auto &item : items_in_accepting_state)
+            {
+                // check if the item is an accepting state and not the end item
+                if (item->sequence_to_parse.empty() && item != item_set.end_item)
+                {
+                    // create a reduce action
+                    lr_parsing_model::Action reduce_action;
+                    reduce_action.action_type = "reduce";
+                    reduce_action.reduce_rule_lhs = item->left_side_symbol;
+                    reduce_action.reduce_rule_rhs = item->sequence_already_parsed;
+                    // add the action to the parsing table for all symbols
+                    for (const auto &symbol : item_set.symbol_set)
+                    {
+                        // add the action to the parsing if the symbol is a terminal
+                        if (symbol.is_terminal)
+                        {
+                            // add the action to the parsing table
+                            bool added = new_parsing_table.add_action(accepting_state, symbol, reduce_action);
+                            if(added)
+                            {
+                                added_reduce_actions++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        spdlog::debug("Added {} reduce actions to the parsing table", added_reduce_actions);
+        // 4. find the accept action
+        // get the end item from the item set and find the corresponding state
+        auto end_item = item_set.end_item;
+        std::unordered_set<std::string> end_item_states;
+        end_item_states = item_set_dfa_mapping.item_set_to_dfa_state.at(end_item);
+        std::string end_item_state = "";
+        // there should be only one end item state
+        if (end_item_states.size() != 1)
+        {
+            std::string error_msg = "Error: End item state not found or multiple end item states found";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        else{
+            end_item_state = *end_item_states.begin();
+        }
+        // get the end symbol
+        cfg_model::symbol end_symbol;
+        int end_symbol_count = 0;
+        for (const auto &symbol: item_set.symbol_set)
+        {
+            if (symbol.special_property == "END")
+            {
+                spdlog::debug("Found end symbol: {}", std::string(symbol));
+                end_symbol = symbol;
+                end_symbol_count++;
+            }
+        }
+        if (end_symbol_count != 1)
+        {
+            std::string error_msg = "Error: End symbol not found or multiple end symbols found";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        // create an accept action
+        lr_parsing_model::Action accept_action;
+        accept_action.action_type = "accept";
+        new_parsing_table.add_action(end_item_state, end_symbol, accept_action);
+        spdlog::debug("Added accept action for state {} and symbol {}", end_item_state, std::string(end_symbol));
+        // 5. fill all the empty cells in the parsing table with empty actions
+        int patched_cells = 0;
+        for (const auto &state : dfa.states_set)
+        {
+            for (const auto &symbol : item_set.symbol_set)
+            {
+                // check if the cell is empty
+                if (new_parsing_table.check_cell_empty(state,symbol))
+                {
+                    // check if the symbol is a terminal or non-terminal
+                    if (!symbol.is_terminal)
+                    {
+                        // fill in the goto state with an empty string
+                        std::string next_state = "";
+                        bool added = new_parsing_table.add_goto(state, symbol, next_state);
+                        if (added) patched_cells++;
+                    }
+                    else
+                    {
+                        // fill in the action with an empty action
+                        lr_parsing_model::Action empty_action;
+                        empty_action.action_type = "empty";
+                        bool added = new_parsing_table.add_action(state, symbol, empty_action);
+                        if (added) patched_cells++;
+                    }
+                }
+            }
+        }
+        spdlog::debug("Patched {} empty cells in the parsing table", patched_cells);
+        // 6. return the parsing table & update the class member variable
+        spdlog::debug("Parsing table built successfully, with {} states and {} symbols", new_parsing_table.all_states.size(), new_parsing_table.all_symbols.size());
+        for (const auto &state : new_parsing_table.all_states)
+        {
+            spdlog::debug("State: {}", state);
+        }
+        for (const auto &symbol : new_parsing_table.all_symbols)
+        {
+            spdlog::debug("Symbol: {}", symbol.name);
+        }
+        parsing_table = new_parsing_table;
+        return parsing_table;
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_msg = "Error during parsing table building: " + std::string(e.what());
         spdlog::error(error_msg);
         throw std::runtime_error(error_msg);
     }
@@ -178,10 +398,14 @@ lr_parsing_model::ItemSetDFAGenerationResult ItemSetToParsingTable::generate_dfa
             // get the NFA state name in the mapping
             std::string nfa_state_name = item_set_nfa_mapping.item_set_to_nfa_state[item];
             // get the DFA state name in the conversion result
-            std::string dfa_state_name = conversion_result.state_mapping.nfa_to_dfa_mapping[nfa_state_name];
+            std::unordered_set<std::string> dfa_state_names = conversion_result.state_mapping.nfa_to_dfa_mapping[nfa_state_name];
             // add the mapping to the new mapping
-            new_item_set_dfa_mapping.item_set_to_dfa_state[item] = dfa_state_name;
-            new_item_set_dfa_mapping.dfa_state_to_item_set[dfa_state_name].insert(item);
+            new_item_set_dfa_mapping.item_set_to_dfa_state[item].insert(dfa_state_names.begin(), dfa_state_names.end());
+            // for each DFA state, add the mapping to the ItemSet
+            for (const auto &dfa_state_name : dfa_state_names)
+            {
+                new_item_set_dfa_mapping.dfa_state_to_item_set[dfa_state_name].insert(item);
+            }
         }
         // iterate over the ItemSet symbols
         for (const auto &symbol : item_set.symbol_set)
@@ -205,6 +429,7 @@ lr_parsing_model::ItemSetDFAGenerationResult ItemSetToParsingTable::generate_dfa
         dfa = conversion_result.dfa;
         item_set_dfa_mapping = new_item_set_dfa_mapping;
         spdlog::debug("ItemSet DFA generation completed");
+        dfa_model_helper::check_conflict_tolerant_dfa_configuration<std::string>(dfa);
         return {dfa, item_set_dfa_mapping};
     }
     catch (const std::exception &e)

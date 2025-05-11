@@ -29,6 +29,65 @@ struct ConflictTolerantDFA {
     std::string initial_state;                                        // 开始状态
     std::unordered_set<std::string> accepting_states;                 // 接受状态集
     std::unordered_map<std::string, std::multimap<T, std::string>> transitions; // 状态转换表
+
+    // count the total number of transitions in the DFA
+    size_t count_transitions() const {
+        size_t count = 0;
+        for (const auto& state_transitions : transitions) {
+            count += state_transitions.second.size();
+        }
+        return count;
+    }
+
+    bool check_transition(const std::string& from_state, const T& input_char, const std::string& to_state) const {
+        try{
+        // check if the states/characters are valid
+        bool from_state_valid = states_set.find(from_state) != states_set.end();
+        bool to_state_valid = states_set.find(to_state) != states_set.end();
+        bool input_char_valid = character_set.find(input_char) != character_set.end();
+        if (!from_state_valid || !to_state_valid || !input_char_valid) {
+            std::string error_msg = "Requesting a transition with invalid states or characters: " + from_state + " --" + input_char + "--> " + to_state;
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        auto it = transitions.find(from_state);
+        if (it != transitions.end()) {
+            auto range = it->second.equal_range(input_char);
+            for (auto iter = range.first; iter != range.second; ++iter) {
+                if (iter->second == to_state) {
+                    return true;
+                }
+            }
+        }
+        return false;
+        }
+        catch (const std::exception& e)
+        {
+            std::string error_msg = "Error checking transition in DFA: " + std::string(e.what());
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+    }
+
+    bool add_transition(const std::string& from_state, const T& input_char, const std::string& to_state) {
+        try{
+            // check if the transition already exists
+            if (check_transition(from_state, input_char, to_state)) {
+                spdlog::debug("Transition already exists in DFA: {} --{}--> {}", from_state, input_char, to_state);
+                return false; // transition already exists, do nothing
+            }
+            // add the transition to the DFA
+            transitions[from_state].insert({input_char, to_state});
+            spdlog::debug("Adding transition to DFA: {} --{}--> {}", from_state, input_char, to_state);
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            std::string error_msg = "Error adding transition to DFA: " + std::string(e.what());
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+    }
 };
 }
 

@@ -41,27 +41,6 @@ protected:
     }
 };
 
-lr_parsing_model::ItemSet generate_test_itemset(const std::string &cfg_file_path)
-{
-    try
-    {
-        // Load the CFG from the YAML file
-        YAML_CFG_Loader cfg_loader;
-        cfg_model::CFG cfg = cfg_loader.LoadCFG(cfg_file_path);
-        // generate the itemset
-        ItemSetGenerator itemset_generator;
-        lr_parsing_model::ItemSet itemset = itemset_generator.generate_item_set(cfg);
-        return itemset;
-    }
-    catch(const std::exception& e)
-    {
-        std::string error_message = "Error generating test itemset: " + std::string(e.what());
-        spdlog::error(error_message);
-        throw std::runtime_error(error_message);
-    }
-    
-}
-
 TEST_F(ItemSetToParsingTableTest, TestItemSetToParsingTableConstructor)
 {
     // Load the CFG from the YAML file

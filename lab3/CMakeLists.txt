@@ -5,6 +5,10 @@ project(Lab3_LR0_Parsing_Table_Generator)
 find_package(yaml-cpp REQUIRED)
 # Add find_package for spdlog
 find_package(spdlog REQUIRED)
+# boost graph library for visualization
+find_package(Boost REQUIRED COMPONENTS graph)
+# tabulate library for visualization
+find_package(tabulate REQUIRED)
 
 # include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -31,6 +35,8 @@ add_executable(test_all
     test/itemset_generator_tests.cpp
     test/multitype_dfa_simulator_tests.cpp
     test/itemset_to_parsing_table_tests.cpp
+    test/simple_lr_parsing_table_generator_tests.cpp
+    test/visualization_helper_tests.cpp
     include/nfa_model.cpp
     include/yaml_cfg_loader.cpp
     include/itemset_generator.cpp
@@ -38,6 +44,9 @@ add_executable(test_all
     include/multitype_dfa_simulator.cpp
     include/itemset_to_parsing_table.cpp
     include/standard_nfa_ctdfa_converter.cpp
+    include/visualization_helper.cpp
+    include/simple_lr_parsing_table_generator.cpp
+    include/lr_parsing_model.cpp
 )
 
 target_link_libraries(test_all

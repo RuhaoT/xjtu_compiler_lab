@@ -33,7 +33,8 @@ namespace std_nfa_ctdfa_converter_helper
         // == operator for NFAClosure
         bool operator==(const NFAClosure &other) const
         {
-            return closure_name == other.closure_name;
+            // judge by states, accepting_state & initial_state
+            return states == other.states && has_initial_state == other.has_initial_state && has_accepting_state == other.has_accepting_state;
         }
     };
 }
@@ -55,7 +56,13 @@ namespace std
 namespace std_nfa_ctdfa_converter_helper
 {
     // get the closure of a state
-    NFAClosure get_epsilon_closure(const nfa_model::NFA &nfa, const std::string &state);
+    NFAClosure get_state_closure(const nfa_model::NFA &nfa, const std::string &state);
+
+    // get the closure of a set of states
+    NFAClosure get_state_set_closure(const nfa_model::NFA &nfa, const std::unordered_set<std::string> &states);
+
+    // merge a set of closures
+    NFAClosure merge_closures(const std::unordered_set<NFAClosure> &closures);
 
     // generate the DFA state name
     std::string generate_unique_state_name(const std::unordered_set<std::string> &nfa_state_names);
@@ -67,10 +74,7 @@ namespace std_nfa_ctdfa_converter_helper
     NFADFABidirectionalMapping generate_state_mapping(const std::unordered_set<NFAClosure> &closure_set);
 
     // generate DFA transitions
-    std::unordered_map<std::string, std::multimap<std::string, std::string>> generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping);
-    
-    // check if one closure is a subset of another
-    bool is_subset(const NFAClosure &closure1, const NFAClosure &closure2);
+    std::unordered_map<std::string, std::multimap<std::string, std::string>> generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::ConflictTolerantDFA<std::string> &dfa);
 }
 
 #endif // !STANDARD_NFA_DFA_CONVERTER_H

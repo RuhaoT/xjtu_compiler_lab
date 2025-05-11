@@ -4,6 +4,7 @@
 #include "cfg_model.h"
 #include "nfa_model.h"
 #include "dfa_model.h"
+#include "spdlog/spdlog.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
@@ -28,21 +29,7 @@ namespace lr_parsing_model
         }
 
         // string representation
-        operator std::string() const
-        {
-            std::string result = "[" + left_side_symbol.name + " -> ";
-            for (const auto &s : sequence_already_parsed)
-            {
-                result += std::string(s) + " ";
-            }
-            result += " · ";
-            for (const auto &s : sequence_to_parse)
-            {
-                result += " " + std::string(s);
-            }
-            result += "]";
-            return result;
-        }
+        operator std::string() const;
     };
 
 } // namespace lr_parsing_model
@@ -53,19 +40,7 @@ namespace std
     template <>
     struct hash<lr_parsing_model::Item>
     {
-        size_t operator()(const lr_parsing_model::Item &item) const
-        {
-            size_t seed = item.left_side_symbol.name.size();
-            for (const auto &s : item.sequence_already_parsed)
-            {
-                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            }
-            for (const auto &s : item.sequence_to_parse)
-            {
-                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            }
-            return seed;
-        }
+        size_t operator()(const lr_parsing_model::Item &item) const;
     };
 } // namespace std
 
@@ -93,8 +68,8 @@ namespace lr_parsing_model
 
     struct ItemSetDFAMapping
     {
-        // Mapping from Items to DFA state, these are many-to-one mappings
-        std::unordered_map<std::shared_ptr<Item>, std::string> item_set_to_dfa_state;
+        // Mapping from Items to DFA state, these are one-to-many mappings
+        std::unordered_map<std::shared_ptr<Item>, std::unordered_set<std::string>> item_set_to_dfa_state;
         // Mapping from DFA state to Items, these are one-to-many mappings
         std::unordered_map<std::string, std::unordered_set<std::shared_ptr<Item>>> dfa_state_to_item_set;
         // Mapping from ItemSet symbols to DFA character set, 1-to-1 mapping
@@ -114,6 +89,71 @@ namespace lr_parsing_model
         dfa_model::ConflictTolerantDFA<std::string> dfa;
         ItemSetDFAMapping item_set_dfa_mapping;
     };
+
+    struct Action
+    {
+        std::string action_type = "";
+        std::string target_state = "";                       // if the action type is "shift"
+        cfg_model::symbol reduce_rule_lhs;                   // if the action type is "reduce"
+        std::vector<cfg_model::symbol> reduce_rule_rhs = {}; // if the action type is "reduce"
+
+        // ==
+        bool operator==(const Action &other) const
+        {
+            return action_type == other.action_type &&
+                   target_state == other.target_state &&
+                   reduce_rule_lhs == other.reduce_rule_lhs &&
+                   reduce_rule_rhs == other.reduce_rule_rhs;
+        }
+    };
 }
+
+// hash function for lr_parsing_model::Action
+namespace std
+{
+    template <>
+    struct hash<lr_parsing_model::Action>
+    {
+        size_t operator()(const lr_parsing_model::Action &action) const
+        {
+            size_t seed = 0;
+            seed ^= hash<std::string>()(action.action_type) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= hash<std::string>()(action.target_state) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= hash<cfg_model::symbol>()(action.reduce_rule_lhs) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            for (const auto &s : action.reduce_rule_rhs)
+            {
+                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+            return seed;
+        }
+    };
+}
+
+namespace lr_parsing_model
+{
+    struct LRParsingTable
+    {
+        std::unordered_set<cfg_model::symbol> all_symbols;
+        std::unordered_set<std::string> all_states;                                                                         // all states in the parsing table
+        std::unordered_map<std::string, std::unordered_map<cfg_model::symbol, std::unordered_set<Action>>> action_table;    // conflict tolerant action table
+        std::unordered_map<std::string, std::unordered_map<cfg_model::symbol, std::unordered_set<std::string>>> goto_table; // goto table, conflict tolerant
+
+        bool add_action(const std::string &state, const cfg_model::symbol &symbol, const Action &action);
+
+        bool add_goto(const std::string &state, const cfg_model::symbol &symbol, const std::string &next_state);
+
+        bool check_cell_empty(const std::string &state, const cfg_model::symbol &symbol) const;
+
+        bool check_action_table_cell_empty(const std::string &state, const cfg_model::symbol &symbol) const;
+
+        bool check_goto_table_cell_empty(const std::string &state, const cfg_model::symbol &symbol) const;
+
+        std::unordered_set<Action> get_actions(const std::string &state, const cfg_model::symbol &symbol) const;
+
+        std::unordered_set<std::string> get_gotos(const std::string &state, const cfg_model::symbol &symbol) const;
+
+        bool filling_check() const;
+    };
+};
 
 #endif // !LR_PARSING_MODEL_H

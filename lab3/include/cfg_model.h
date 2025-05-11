@@ -12,19 +12,23 @@ namespace cfg_model
 {
     struct symbol
     {
-        std::string name;
-        bool is_terminal;
+        std::string name = "";
+        bool is_terminal = false;
+        std::string special_property = "";
 
         // overload the equality operator
         bool operator==(const symbol &other) const
         {
-            return name == other.name && is_terminal == other.is_terminal;
+            return name == other.name && is_terminal == other.is_terminal && special_property == other.special_property;
         }
 
         // string representation
         operator std::string() const
         {
-            return is_terminal ? name + "_T" : name + "_NT";
+            std::string result = name;
+            result += std::string(is_terminal ? "_T" : "_NT");
+            result += special_property.empty() ? "" : "_" + special_property;
+            return result;
         }
     };
 } // namespace cfg_model
@@ -41,7 +45,9 @@ namespace std
             // Use the same logic as your symbol_hash or a refined one
             size_t h1 = hash<string>()(s.name);
             size_t h2 = hash<bool>()(s.is_terminal);
-            return h1 ^ h2; // Or boost::hash_combine
+            size_t h3 = hash<string>()(s.special_property);
+            // Combine the hashes
+            return h1 ^ (h2 << 1) ^ (h3 << 2); // or use boost::hash_combine
         }
     };
 } // namespace std

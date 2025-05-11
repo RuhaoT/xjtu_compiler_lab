@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "yaml_cfg_loader.h"
+#include "lr_parsing_model.h"
 #include <memory>
 #include <string>
 
@@ -12,6 +14,9 @@ void release_fixture_logger();
 
 void add_test_start_log(const std::string &test_name);
 void add_test_end_log(const std::string &test_name);
+
+cfg_model::CFG load_test_cfg(const std::string &filename);
+lr_parsing_model::ItemSet generate_test_itemset(const std::string &cfg_file_path);
 
 // a global environment for storing the logger pointer
 class LoggingEnvironment : public ::testing::Environment

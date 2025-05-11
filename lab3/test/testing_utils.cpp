@@ -2,6 +2,9 @@
 #include "spdlog/spdlog.h"
 #include "testing_utils.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "yaml_cfg_loader.h"
+#include "lr_parsing_model.h"
+#include "itemset_generator.h"
 #include <memory>
 #include <string>
 
@@ -56,4 +59,41 @@ void add_test_end_log(const std::string &test_name) {
     LoggingEnvironment::logger->info("--------------------------------------------------");
     LoggingEnvironment::logger->info("Finished test: {}", test_name);
     LoggingEnvironment::logger->info("--------------------------------------------------");
+}
+
+cfg_model::CFG load_test_cfg(const std::string &cfg_file_path)
+{
+    try
+    {
+        // Load the CFG from the YAML file
+        YAML_CFG_Loader cfg_loader;
+        cfg_model::CFG cfg = cfg_loader.LoadCFG(cfg_file_path);
+        return cfg;
+    }
+    catch(const std::exception& e)
+    {
+        std::string error_message = "Error loading test CFG: " + std::string(e.what());
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+}
+
+lr_parsing_model::ItemSet generate_test_itemset(const std::string &cfg_file_path)
+{
+    try
+    {
+        // Load the CFG from the YAML file
+        cfg_model::CFG cfg = load_test_cfg(cfg_file_path);
+        // generate the itemset
+        ItemSetGenerator itemset_generator;
+        lr_parsing_model::ItemSet itemset = itemset_generator.generate_item_set(cfg);
+        return itemset;
+    }
+    catch(const std::exception& e)
+    {
+        std::string error_message = "Error generating test itemset: " + std::string(e.what());
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+    
 }

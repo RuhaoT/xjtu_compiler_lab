@@ -1,3 +1,6 @@
+#ifndef ITEMSET_GENERATOR_H
+#define ITEMSET_GENERATOR_H
+
 #include "lr_parsing_model.h"
 #include "cfg_model.h"
 #include "spdlog/spdlog.h"
@@ -28,4 +31,10 @@ namespace itemset_generator_helper
 
     // generate the item set for a given production rule(epsilon)
     std::unordered_set<std::shared_ptr<lr_parsing_model::Item>> gen_epsilon_production_rule_items(const cfg_model::symbol &left_side_symbol);
+
+    // given a cfg, generate a new unique symbol name by appending a suffix
+    std::string generate_unique_symbol_name(const std::string &base_name, const cfg_model::CFG &cfg, const std::string &suffix);
 }
+
+#endif // !ITEMSET_GENERATOR_H
+

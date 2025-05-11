@@ -65,11 +65,11 @@ lr_parsing_model::ItemSet ItemSetGenerator::generate_item_set(const cfg_model::C
     item_set.end_item = parsing_end_item;
     // 5. generate the symbol set
     // all terminals and non-terminals in the item set
-    for (const auto &symbol : cfg.non_terminals)
+    for (const auto &symbol : expanded_cfg.non_terminals)
     {
         item_set.symbol_set.insert(symbol);
     }
-    for (const auto &symbol : cfg.terminals)
+    for (const auto &symbol : expanded_cfg.terminals)
     {
         item_set.symbol_set.insert(symbol);
     }
@@ -86,13 +86,7 @@ cfg_model::CFG itemset_generator_helper::expand_cfg(const cfg_model::CFG &cfg)
         // 1. read the initial symbol
         auto original_initial_symbol = cfg.start_symbol;
         // 2. create a new initial symbol
-        std::string new_initial_symbol_name = original_initial_symbol.name + "_expanded";
-        // keep adding _expanded to the name until it is unique
-        while (expanded_cfg.non_terminals.find({new_initial_symbol_name, false}) != expanded_cfg.non_terminals.end())
-        {
-            spdlog::debug("New initial symbol name already exists, adding another _expanded to the name");
-            new_initial_symbol_name += "_expanded";
-        }
+        std::string new_initial_symbol_name = generate_unique_symbol_name(original_initial_symbol.name, cfg, "_expanded");
         cfg_model::symbol new_initial_symbol;
         new_initial_symbol.name = new_initial_symbol_name;
         new_initial_symbol.is_terminal = false;
@@ -123,7 +117,14 @@ cfg_model::CFG itemset_generator_helper::expand_cfg(const cfg_model::CFG &cfg)
         {
             expanded_cfg.epsilon_production_symbols.insert(epsilon_symbol);
         }
-        // 6. return the expanded CFG
+        // 6. add an end symbol to the CFG
+        std::string end_symbol_name = generate_unique_symbol_name(original_initial_symbol.name, cfg, "_end");
+        cfg_model::symbol end_symbol;
+        end_symbol.name = end_symbol_name;
+        end_symbol.is_terminal = true;
+        end_symbol.special_property = "END";
+        // add the end symbol to the CFG
+        expanded_cfg.terminals.insert(end_symbol);
         return expanded_cfg;
     }
     catch (const std::exception &e)
@@ -231,6 +232,27 @@ std::unordered_set<std::shared_ptr<lr_parsing_model::Item>> itemset_generator_he
     catch (const std::exception &e)
     {
         std::string error_msg = "Error during CFG item generation: " + std::string(e.what());
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
+    }
+}
+
+std::string itemset_generator_helper::generate_unique_symbol_name(const std::string &base_name, const cfg_model::CFG &cfg, const std::string &suffix)
+{
+    try
+    {
+        // generate a new unique symbol name by appending a suffix
+        std::string new_symbol_name = base_name + suffix;
+        // check if the new symbol name already exists in the CFG
+        while (cfg.non_terminals.find({new_symbol_name, false}) != cfg.non_terminals.end() || cfg.terminals.find({new_symbol_name, true}) != cfg.terminals.end())
+        {
+            new_symbol_name += suffix;
+        }
+        return new_symbol_name;
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_msg = "Error during unique symbol name generation: " + std::string(e.what());
         spdlog::error(error_msg);
         throw std::runtime_error(error_msg);
     }

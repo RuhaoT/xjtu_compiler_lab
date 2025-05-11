@@ -20,7 +20,7 @@ private:
     lr_parsing_model::ItemSetNFAMapping item_set_nfa_mapping;
     dfa_model::ConflictTolerantDFA<std::string> dfa;
     lr_parsing_model::ItemSetDFAMapping item_set_dfa_mapping;
-    // TBD: parsing table
+    lr_parsing_model::LRParsingTable parsing_table;
 
 public:
     ItemSetToParsingTable(const lr_parsing_model::ItemSet &item_set);
@@ -32,7 +32,11 @@ public:
     // generate corresponding DFA for the item set
     lr_parsing_model::ItemSetDFAGenerationResult generate_dfa();
 
-    // get nfa & mapping
+
+
+    lr_parsing_model::LRParsingTable build_parsing_table();
+
+        // get nfa & mapping
     lr_parsing_model::ItemSetNFAGenerationResult get_nfa() const
     {
         return {nfa, item_set_nfa_mapping};
@@ -41,6 +45,11 @@ public:
     lr_parsing_model::ItemSetDFAGenerationResult get_dfa() const
     {
         return {dfa, item_set_dfa_mapping};
+    }
+    // get parsing table
+    lr_parsing_model::LRParsingTable get_parsing_table() const
+    {
+        return parsing_table;
     }
 };
 

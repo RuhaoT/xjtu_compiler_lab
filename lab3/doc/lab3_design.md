@@ -104,7 +104,28 @@ ParsingTableGenerator产生规范族的第一步是将输入的CFG文法进行�
 - 空转移函数: `unordered_map<string, unordered_set<string>>`
 
 #### LR(0)项目集规范族ParsingTable
-TBD
+
+LR(0)项目集规范族ParsingTable是LR(0)分析下推自动机的核心部分。其主要包含ACTION表和GOTO表。ACTION表用于存储状态转移信息，GOTO表用于存储状态转移的目标状态。事实上，ACTION表和GOTO表只需要额外记录一份CFG的符号/状态表即可。
+
+在ACTION表中，每个表格的值（假设没有冲突）可能拥有以下几种不同的涵义：
+- 移进（Shift）：表示当前状态可以转移到下一个状态。
+- 归约（Reduce）：表示当前状态可以归约为一个产生式。
+- 接受（Accept）：表示当前状态可以接受输入串。
+- 空（Empty）：表示当前状态没有任何转移。
+
+因此我们可以将一个ACTION如下表示：
+- 动作类型: `string`
+- 目标状态: `string`
+- 产生式: `pair<symbol, vector<symbol>>`
+
+因此ACTION表可以表示为一个`unordered_map<string, unordered_map<symbol>, unordered_set<Action>>>`，其中key为当前状态，value为一个unordered_map，key为输入符号。考虑到冲突的情况，value为一个unordered_set，存储所有可能的动作。
+GOTO表的表示方式和ACTION表类似，由当前状态和输入状态确定一个unordered_set，存储所有可能的转移状态：`unordered_map<string, unordered_map<symbol, unordered_set<string>>>`。
+
+因此一个ParsingTable可以表示为一个包含ACTION表、GOTO表和CFG符号表的结构体。
+
+
+
+
 
 #### YAML文件格式
 
@@ -123,15 +144,11 @@ cfg:
   - "("
   - ")"
   non_terminals:
-  - "S"
   - "E"
   - "T"
   - "F"
-  initial_symbol: "S"
+  initial_symbol: "E"
   production_rules:
-  - lhs: "S"
-    rhs:
-    - "E"
   - lhs: "E"
     rhs:
     - "E"

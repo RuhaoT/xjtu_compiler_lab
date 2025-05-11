@@ -12,19 +12,6 @@
 StandardNFA_DFA_Converter::StandardNFA_DFA_Converter() = default;
 StandardNFA_DFA_Converter::~StandardNFA_DFA_Converter() = default;
 
-bool std_nfa_ctdfa_converter_helper::is_subset(const NFAClosure &closure1, const NFAClosure &closure2)
-{
-    // check if closure1 is a subset of closure2
-    for (const auto &state : closure1.states)
-    {
-        if (closure2.states.find(state) == closure2.states.end())
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa_model::NFA &nfa)
 {
     try
@@ -45,10 +32,7 @@ NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa
         // step 2: generate the state mapping
         NFADFABidirectionalMapping state_mapping = std_nfa_ctdfa_converter_helper::generate_state_mapping(closure_set);
 
-        // step 3: generate the DFA transitions
-        std::unordered_map<std::string, std::multimap<std::string, std::string>> dfa_transitions = std_nfa_ctdfa_converter_helper::generate_dfa_transitions(nfa, state_mapping);
-
-        // step 4: build the DFA
+        // step 3: build the DFA
         dfa_model::ConflictTolerantDFA<std::string> dfa;
         dfa.character_set = nfa.character_set;
         // iterate through the closure set and build the DFA states
@@ -69,13 +53,16 @@ NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa
                 spdlog::debug("DFA initial state: {}", closure.closure_name);
             }
         }
-        // add the DFA transitions
-        dfa.transitions = dfa_transitions;
+        // step 4: generate the DFA transitions
+        std::unordered_map<std::string, std::multimap<std::string, std::string>> dfa_transitions = std_nfa_ctdfa_converter_helper::generate_dfa_transitions(nfa, state_mapping, dfa);
+
+        // step 5: check & finish the DFA
         // check the DFA configurations
         dfa_model_helper::check_conflict_tolerant_dfa_configuration(dfa);
         // update the result
         result.dfa = dfa;
         result.state_mapping = state_mapping;
+        spdlog::debug("Generated DFA with {} states, {} accepting states, and {} transitions", dfa.states_set.size(), dfa.accepting_states.size(), dfa.count_transitions());
         spdlog::debug("DFA generation completed");
         // return the result
         return result;
@@ -99,10 +86,17 @@ std::string std_nfa_ctdfa_converter_helper::generate_unique_state_name(const std
         // use the simplest way: concatenate all state names with a separator
         std::string unique_state_name;
         unique_state_name += "[\n";
-        for (const auto &state_name : nfa_state_names)
+
+        // copy the nfa_state_names and sort
+        std::vector<std::string> sorted_state_names(nfa_state_names.begin(), nfa_state_names.end());
+        std::sort(sorted_state_names.begin(), sorted_state_names.end());
+        // iterate through the sorted state names
+        for (const auto &state_name : sorted_state_names)
         {
+            // add the state name to the unique state name
             unique_state_name += state_name + "\n";
         }
+
         if (!unique_state_name.empty())
         {
             ;
@@ -123,7 +117,7 @@ std::string std_nfa_ctdfa_converter_helper::generate_unique_state_name(const std
     }
 }
 
-std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_epsilon_closure(const nfa_model::NFA &nfa, const std::string &state)
+std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_state_closure(const nfa_model::NFA &nfa, const std::string &state)
 {
     try
     {
@@ -212,65 +206,152 @@ std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_e
     }
 }
 
+std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::merge_closures(const std::unordered_set<NFAClosure> &closures)
+{
+    try
+    {
+        // merge the closures into one closure
+        NFAClosure merged_closure;
+        merged_closure.has_accepting_state = false;
+        merged_closure.has_initial_state = false;
+        for (const auto &closure : closures)
+        {
+            merged_closure.states.insert(closure.states.begin(), closure.states.end());
+            merged_closure.has_accepting_state |= closure.has_accepting_state;
+            merged_closure.has_initial_state |= closure.has_initial_state;
+        }
+        // generate the closure name
+        merged_closure.closure_name = generate_unique_state_name(merged_closure.states);
+        spdlog::debug("Merged closure name: {}", merged_closure.closure_name);
+        return merged_closure;
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_message = "Error merging closures: ";
+        error_message += e.what();
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+}
+
+std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_state_set_closure(const nfa_model::NFA &nfa, const std::unordered_set<std::string> &states)
+{
+    try
+    {
+        // get the closure for each state in the set
+        std::unordered_set<NFAClosure> closures;
+        for (const auto &state : states)
+        {
+            NFAClosure closure = get_state_closure(nfa, state);
+            closures.insert(closure);
+        }
+        // merge the closures into one closure
+        return merge_closures(closures);
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_message = "Error getting closure for state set: ";
+        error_message += e.what();
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+}
+
 std::unordered_set<std_nfa_ctdfa_converter_helper::NFAClosure>
 std_nfa_ctdfa_converter_helper::generate_closure_set(const nfa_model::NFA &nfa)
 {
     try
     {
-        spdlog::debug("Generating closure set for NFA.");
+        spdlog::debug("Generating closure set:");
         std::unordered_set<NFAClosure> closure_set;
-        // 1. generate the closure for each NFA state
-        for (const auto &state : nfa.states)
+        int closure_set_increment = 1;
+        // initialize the closure set with the closure of the start state
+        NFAClosure start_state_closure = get_state_closure(nfa, nfa.start_state);
+        closure_set.insert(start_state_closure);
+        spdlog::debug("Initial closure set: {}", start_state_closure.closure_name);
+        // start growing the closure set
+        int accepting_closure_count = 0;
+        int initial_closure_count = 0;
+        while (closure_set_increment > 0)
         {
-            NFAClosure closure = get_epsilon_closure(nfa, state);
-            // check for closure with the same name
-            if (closure_set.find(closure) != closure_set.end())
+            closure_set_increment = 0;
+            std::unordered_set<NFAClosure> new_closures;
+            // iterate through the closure set
+            for (const auto &closure : closure_set)
             {
-                std::string error_message = "The closure set already contains a closure with the same name: " + closure.closure_name;
-                spdlog::error(error_message);
-                throw std::runtime_error(error_message);
+                std::unordered_map<std::string, std::unordered_set<std::string>> transition_reachable_states;
+                // iterate through the closure states
+                for (const auto &state : closure.states)
+                {
+                    // check if the state has any non-epsilon transitions
+                    if (nfa.non_epsilon_transitions.find(state) == nfa.non_epsilon_transitions.end())
+                    {
+                        spdlog::debug("No non-epsilon transitions for state {}", state);
+                        continue;
+                    }
+                    // iterate through the non-epsilon transitions
+                    for (const auto &transition : nfa.non_epsilon_transitions.at(state))
+                    {
+                        // for now we don't build closure transitions but just find the reachable states
+                        std::string input_string = transition.first;
+                        std::string next_state = transition.second;
+                        // add the next state to the corresponding input string in transition_reachable_states
+                        transition_reachable_states[input_string].insert(next_state);
+                    }
+                }
+                // iterate through the transition reachable states
+                for (const auto &reachable_states : transition_reachable_states)
+                {
+                    std::string input_string = reachable_states.first;
+                    std::unordered_set<std::string> reachable_state_set = reachable_states.second;
+                    spdlog::debug("Closure {} has reachable states for input {}: {}", closure.closure_name, input_string, fmt::join(reachable_state_set, ", "));
+                    // get the closure for the reachable states
+                    NFAClosure new_closure = get_state_set_closure(nfa, reachable_state_set);
+                    // check if the new closure is already in the closure set
+                    if (closure_set.find(new_closure) == closure_set.end())
+                    {
+                        // add the new closure to the new closures set
+                        new_closures.insert(new_closure);
+                        spdlog::debug("New closure found: {}", new_closure.closure_name);
+                        // increment the closure set increment
+                        closure_set_increment++;
+                        if (new_closure.has_accepting_state)
+                        {
+                            spdlog::debug("This closure has an accepting state");
+                        }
+                        if (new_closure.has_initial_state)
+                        {
+                            spdlog::debug("This closure has the initial state");
+                        }
+                    }
+                    else
+                    {
+                        spdlog::debug("Omitting one closure as it is already in the closure set");
+                    }
+                }
             }
-            // add the closure to the closure set
-            closure_set.insert(closure);
-            spdlog::debug("Added closure {} with {} states to the closure set", closure.closure_name, closure.states.size());
-        }
 
-        // 2. remove subset closures
-        // iterate through the closure set
-        std::unordered_set<NFAClosure> closure_to_remove;
-        for (const auto &closure1 : closure_set)
-        {
-            for (const auto &closure2 : closure_set)
+            // add the new closures to the closure set
+            for (const auto &new_closure : new_closures)
             {
-                // if the closures are the same, skip
-                if (closure1 == closure2)
+                closure_set.insert(new_closure);
+                if (new_closure.has_accepting_state)
                 {
-                    continue;
+                    accepting_closure_count++;
                 }
-                // check if closure1 is a subset of closure2
-                if (is_subset(closure1, closure2))
+                if (new_closure.has_initial_state)
                 {
-                    // if so, add closure1 to the closure to remove set
-                    closure_to_remove.insert(closure1);
-                    spdlog::debug("Closure {} is marked for removal from the closure set", closure1.closure_name);
-                }
-                // check if closure2 is a subset of closure1
-                if (is_subset(closure2, closure1))
-                {
-                    // if so, add closure2 to the closure to remove set
-                    closure_to_remove.insert(closure2);
-                    spdlog::debug("Closure {} is marked for removal from the closure set", closure2.closure_name);
+                    initial_closure_count++;
+                    if (initial_closure_count > 1)
+                    {
+                        std::string error_message = "The closure set has more than one initial state";
+                        spdlog::error(error_message);
+                        throw std::runtime_error(error_message);
+                    }
                 }
             }
+            spdlog::debug("The closure set has grown by {} closures to {} closures", closure_set_increment, closure_set.size());
         }
-
-        // remove the closures from the closure set
-        for (const auto &closure : closure_to_remove)
-        {
-            closure_set.erase(closure);
-        }
-        spdlog::debug("Removed {} closures from the closure set", closure_to_remove.size());
-        
         // check if the closure set is empty
         if (closure_set.empty())
         {
@@ -278,14 +359,7 @@ std_nfa_ctdfa_converter_helper::generate_closure_set(const nfa_model::NFA &nfa)
             spdlog::error(error_message);
             throw std::runtime_error(error_message);
         }
-        else
-        {
-            spdlog::debug("Closure set generated with {} closures:", closure_set.size());
-            for (const auto &closure : closure_set)
-            {
-                spdlog::debug("\tClosure: {}", closure.closure_name);
-            }
-        }
+        spdlog::debug("Closure set generation completed with {} closures, {} of them are accepting closures, and {} of them are initial closures", closure_set.size(), accepting_closure_count, initial_closure_count);
         // return the closure set
         return closure_set;
     }
@@ -315,7 +389,7 @@ NFADFABidirectionalMapping std_nfa_ctdfa_converter_helper::generate_state_mappin
             for (const auto &nfa_state : closure.states)
             {
                 // add the NFA state to the mapping
-                state_mapping.nfa_to_dfa_mapping[nfa_state] = dfa_state_name;
+                state_mapping.nfa_to_dfa_mapping[nfa_state].insert(dfa_state_name);
             }
             spdlog::debug("\tDFA state: {} -> NFA states: {}", dfa_state_name, fmt::join(closure.states, ", "));
         }
@@ -330,7 +404,7 @@ NFADFABidirectionalMapping std_nfa_ctdfa_converter_helper::generate_state_mappin
     }
 }
 
-std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa_ctdfa_converter_helper::generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping)
+std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa_ctdfa_converter_helper::generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::ConflictTolerantDFA<std::string> &dfa)
 {
     try
     {
@@ -346,7 +420,7 @@ std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa
                 spdlog::error(error_message);
                 throw std::runtime_error(error_message);
             }
-            std::string dfa_state = state_mapping.nfa_to_dfa_mapping.at(nfa_state);
+            std::unordered_set dfa_states = state_mapping.nfa_to_dfa_mapping.at(nfa_state);
             // iterate through the NFA transitions
             // only need to check the non-epsilon transitions
             // first check if the NFA state has any non-epsilon transitions
@@ -357,6 +431,7 @@ std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa
             }
             for (const auto &transition : nfa.non_epsilon_transitions.at(nfa_state))
             {
+                spdlog::debug("Processing transition: {}--{}-->{}", nfa_state, transition.first, transition.second);
                 std::string input_string = transition.first;
                 // find the corresponding DFA state
                 if (state_mapping.nfa_to_dfa_mapping.find(transition.second) == state_mapping.nfa_to_dfa_mapping.end())
@@ -365,10 +440,15 @@ std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa
                     spdlog::error(error_message);
                     throw std::runtime_error(error_message);
                 }
-                std::string dfa_next_state = state_mapping.nfa_to_dfa_mapping.at(transition.second);
-                // add the transition to the DFA transitions
-                dfa_transitions[dfa_state].insert({input_string, dfa_next_state});
-                spdlog::debug("\tDFA transition: {} --{}--> {}", dfa_state, input_string, dfa_next_state);
+                std::unordered_set dfa_next_states = state_mapping.nfa_to_dfa_mapping.at(transition.second);
+                // add the transition to the DFA transitions for each dfa_state and dfa_next_state
+                for (const auto& dfa_state: dfa_states)
+                {
+                    for (const auto&dfa_next_state :dfa_next_states)
+                    {
+                        dfa.add_transition(dfa_state,input_string,dfa_next_state);
+                    }
+                }
             }
         }
         return dfa_transitions;

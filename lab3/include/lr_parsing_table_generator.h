@@ -10,5 +10,14 @@
 #include <vector>
 #include <string>
 
+class LRParsingTableGenerator
+{
+public:
+    virtual ~LRParsingTableGenerator() = default;
+
+    virtual lr_parsing_model::LRParsingTable generate_parsing_table(const cfg_model::CFG &cfg) = 0;
+
+    virtual lr_parsing_model::ItemSet generate_item_set(const cfg_model::CFG &cfg) = 0;
+};
 
 #endif // !LR_PARSING_TABLE_GENERATOR_H

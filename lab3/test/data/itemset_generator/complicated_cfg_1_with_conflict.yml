@@ -10,15 +10,11 @@ cfg:
   - "("
   - ")"
   non_terminals:
-  - "S"
   - "E"
   - "T"
   - "F"
-  initial_symbol: "S"
+  initial_symbol: "E"
   production_rules:
-  - lhs: "S"
-    rhs:
-    - "E"
   - lhs: "E"
     rhs:
     - "E"

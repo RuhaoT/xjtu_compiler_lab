@@ -39,13 +39,17 @@ TEST_F(ItemSetGeneratorTests, TestExpandCFG)
     // load the CFG from the YAML file
     std::string filename = "test/data/itemset_generator/minimal_correct_cfg.yml";
     cfg_model::CFG cfg = YAML_CFG_Loader_Helper::ParseYAMLFile(filename);
+    int original_symbol_count = cfg.non_terminals.size() + cfg.terminals.size();
     // expand the CFG
     cfg_model::CFG expanded_cfg = itemset_generator_helper::expand_cfg(cfg);
     // check the expanded CFG
-    ASSERT_EQ(expanded_cfg.start_symbol.name, "S_expanded");
+    ASSERT_EQ(expanded_cfg.start_symbol.name, "X_expanded");
     ASSERT_EQ(expanded_cfg.production_rules.size(), cfg.production_rules.size() + 1);
     ASSERT_EQ(expanded_cfg.production_rules[expanded_cfg.start_symbol].size(), 1);
     ASSERT_NO_THROW(YAML_CFG_Loader_Helper::CheckCFG(expanded_cfg));
+    int expanded_symbol_count = expanded_cfg.non_terminals.size() + expanded_cfg.terminals.size();
+    // check that the number of symbols has increased
+    ASSERT_EQ(expanded_symbol_count, original_symbol_count + 2); // one expanded start symbol and one end symbol
 }
 
 TEST_F(ItemSetGeneratorTests, TestExpandCFGNameOccupied)
@@ -72,5 +76,19 @@ TEST_F(ItemSetGeneratorTests, TestGenerateCFGItems)
     lr_parsing_model::ItemSet item_set;
     ASSERT_NO_THROW(item_set = item_set_generator.generate_item_set(cfg));
     
-    ASSERT_EQ(item_set.items.size(), 23);// 21 items + 2 initial and final items
+    ASSERT_EQ(item_set.items.size(), 9);// 7 items + 2 initial and final items
+    ASSERT_EQ(item_set.symbol_set.size(),(cfg.terminals.size() + cfg.non_terminals.size() + 2));
+}
+
+TEST_F(ItemSetGeneratorTests, TestGenerateComplicatedCFGItems)
+{
+    // load the CFG from the YAML file
+    std::string filename = "test/data/itemset_generator/complicated_cfg_1_with_conflict.yml";
+    cfg_model::CFG cfg = YAML_CFG_Loader_Helper::ParseYAMLFile(filename);
+    
+    ItemSetGenerator item_set_generator;
+    lr_parsing_model::ItemSet item_set;
+    ASSERT_NO_THROW(item_set = item_set_generator.generate_item_set(cfg));
+    
+    ASSERT_EQ(item_set.items.size(), 20);// 18 items + 2 initial and final items
 }

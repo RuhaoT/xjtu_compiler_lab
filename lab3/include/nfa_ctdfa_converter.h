@@ -7,11 +7,11 @@
 struct NFADFABidirectionalMapping
 {
     // Mapping from DFA state(first) to NFA states(second)
-    // this is a 1-to-many mapping
+    // this is a 1-to-many mapping, one DFA state has many NFA states
     std::unordered_map<std::string, std::unordered_set<std::string>> dfa_to_nfa_mapping;
     // Mapping from NFA state(first) to DFA states(second)
-    // this is a many-to-1 mapping
-    std::unordered_map<std::string, std::string> nfa_to_dfa_mapping;
+    // this is also a 1-to-many mapping, one NFA state can belong to many closures
+    std::unordered_map<std::string, std::unordered_set<std::string>> nfa_to_dfa_mapping;
 };
 
 struct NFACTDFAConvertionResult
