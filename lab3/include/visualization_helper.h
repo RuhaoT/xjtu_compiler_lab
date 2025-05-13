@@ -22,6 +22,6 @@ namespace visualization_helper
 
     void generate_nfa_dot_file(const nfa_model::NFA &nfa, const std::string &filename, bool generate_svg = false);
 
-    void generate_ctdfa_dot_file(const dfa_model::ConflictTolerantDFA<std::string> &dfa, const std::string &filename, bool generate_svg = false);
+    void generate_dfa_dot_file(const dfa_model::DFA<std::string> &dfa, const std::string &filename, bool generate_svg = false);
 }
 #endif // !VISUALIZATION_HELPER_H

@@ -21,6 +21,13 @@ struct NFACTDFAConvertionResult
     NFADFABidirectionalMapping state_mapping;
 };
 
+struct NFADFAConvertionResult
+{
+    dfa_model::DFA<std::string> dfa; // The converted DFA
+    // Mapping from DFA state to NFA states
+    NFADFABidirectionalMapping state_mapping;
+};
+
 class NFA_ConflictToleranceDFA_Converter
 {
     public:
@@ -30,6 +37,17 @@ class NFA_ConflictToleranceDFA_Converter
 
         // Convert NFA to DFA
         virtual NFACTDFAConvertionResult convert_nfa_to_dfa(const nfa_model::NFA &nfa) = 0;
+};
+
+class NFA_DFA_Converter
+{
+    public:
+        // Constructor
+        NFA_DFA_Converter() = default;
+        virtual ~NFA_DFA_Converter() = default;
+
+        // Convert NFA to DFA
+        virtual NFADFAConvertionResult convert_nfa_to_dfa(const nfa_model::NFA &nfa) = 0;
 };
 
 #endif // !NFA_DFA_CONVERTER_H

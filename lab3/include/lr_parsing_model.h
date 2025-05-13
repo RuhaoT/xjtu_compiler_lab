@@ -86,7 +86,7 @@ namespace lr_parsing_model
 
     struct ItemSetDFAGenerationResult
     {
-        dfa_model::ConflictTolerantDFA<std::string> dfa;
+        dfa_model::DFA<std::string> dfa;
         ItemSetDFAMapping item_set_dfa_mapping;
     };
 

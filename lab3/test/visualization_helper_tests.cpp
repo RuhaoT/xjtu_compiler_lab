@@ -92,10 +92,10 @@ TEST_F(VisualizationHelperTests, TestGenerateCTDfaDotFile)
     SimpleLRParsingTableGenerator generator;
     // Generate the parsing table
     lr_parsing_model::ItemSetDFAGenerationResult result = generator.generate_item_set_dfa(cfg);
-    dfa_model::ConflictTolerantDFA<std::string> dfa = result.dfa;
+    dfa_model::DFA<std::string> dfa = result.dfa;
     // Generate the CTDFA dot file
-    std::string dot_file_path = "test/data/visualization_helper/ctdfa.dot";
-    ASSERT_NO_THROW(visualization_helper::generate_ctdfa_dot_file(dfa, dot_file_path, true)) << "generate_ctdfa_dot_file threw an exception";
+    std::string dot_file_path = "test/data/visualization_helper/dfa.dot";
+    ASSERT_NO_THROW(visualization_helper::generate_dfa_dot_file(dfa, dot_file_path, true)) << "generate_dfa_dot_file threw an exception";
 }
 
 // Test case for generating NFA dot file with complicated CFG
@@ -124,8 +124,8 @@ TEST_F(VisualizationHelperTests, TestGenerateCTDfaDotFileComplicated)
     SimpleLRParsingTableGenerator generator;
     // Generate the parsing table
     lr_parsing_model::ItemSetDFAGenerationResult result = generator.generate_item_set_dfa(cfg);
-    dfa_model::ConflictTolerantDFA<std::string> dfa = result.dfa;
+    dfa_model::DFA<std::string> dfa = result.dfa;
     // Generate the CTDFA dot file
-    std::string dot_file_path = "test/data/visualization_helper/ctdfa_complicated.dot";
-    ASSERT_NO_THROW(visualization_helper::generate_ctdfa_dot_file(dfa, dot_file_path, true)) << "generate_ctdfa_dot_file threw an exception";
+    std::string dot_file_path = "test/data/visualization_helper/dfa_complicated.dot";
+    ASSERT_NO_THROW(visualization_helper::generate_dfa_dot_file(dfa, dot_file_path, true)) << "generate_dfa_dot_file threw an exception";
 }

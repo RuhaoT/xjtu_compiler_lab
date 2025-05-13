@@ -19,6 +19,70 @@ struct DFA {
     std::string initial_state;                                        // 开始状态
     std::unordered_set<std::string> accepting_states;                 // 接受状态集
     std::unordered_map<std::string, std::unordered_map<T, std::string>> transitions; // 状态转换表
+
+    size_t count_transitions() const {
+        size_t count = 0;
+        for (const auto& state_transitions : transitions) {
+            count += state_transitions.second.size();
+        }
+        return count;
+    }
+    bool check_transition(const std::string& from_state, const T& input_char, const std::string& to_state) const {
+        try {
+        // check if the states/characters are valid
+        bool from_state_valid = states_set.find(from_state) != states_set.end();
+        bool to_state_valid = states_set.find(to_state) != states_set.end();
+        bool input_char_valid = character_set.find(input_char) != character_set.end();
+        if (!from_state_valid || !to_state_valid || !input_char_valid) {
+            std::string error_msg = "Requesting a transition with invalid states or characters: " + from_state + " --" + input_char + "--> " + to_state;
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        auto it = transitions.find(from_state);
+        if (it != transitions.end()) {
+            auto it2 = it->second.find(input_char);
+            if (it2 != it->second.end() && it2->second == to_state) {
+                return true;
+            }
+        }
+        return false;
+    }
+        catch (const std::exception& e)
+        {
+            std::string error_msg = "Error checking transition in DFA: " + std::string(e.what());
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+    }
+    bool add_transition(const std::string& from_state, const T& input_char, const std::string& to_state) {
+        try {
+        // check if the transition already exists
+        if (check_transition(from_state, input_char, to_state)) {
+            spdlog::debug("Transition already exists in DFA: {} --{}--> {}", from_state, input_char, to_state);
+            return false; // transition already exists, do nothing
+        }
+        // check if there is a conflict: same from_state and input_char but different to_state
+        auto it = transitions.find(from_state);
+        if (it != transitions.end()) {
+            auto it2 = it->second.find(input_char);
+            if (it2 != it->second.end() && it2->second != to_state) {
+                std::string error_msg = "Conflict in DFA: {} --{}--> {} and {} --{}--> {}";
+                spdlog::error(error_msg, from_state, input_char, it2->second, from_state, input_char, to_state);
+                throw std::runtime_error(error_msg);
+            }
+        }
+        // add the transition to the DFA
+        transitions[from_state][input_char] = to_state;
+        spdlog::debug("Adding transition to DFA: {} --{}--> {}", from_state, input_char, to_state);
+        return true;
+    }
+    catch (const std::exception& e)
+        {
+            std::string error_msg = "Error adding transition to DFA: " + std::string(e.what());
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+    }
 };
 
 // A DFA that can tolerate conflicts, a stepping stone for PDA creation and SLR1 conflict resolution

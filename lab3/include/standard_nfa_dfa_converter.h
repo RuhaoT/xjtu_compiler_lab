@@ -3,14 +3,14 @@
 
 #include "nfa_model.h"
 #include "dfa_model.h"
-#include "nfa_ctdfa_converter.h"
+#include "nfa_dfa_converter.h"
 #include "spdlog/spdlog.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
 #include <string> 
 
-class StandardNFA_DFA_Converter : public NFA_ConflictToleranceDFA_Converter
+class StandardNFA_DFA_Converter : public NFA_DFA_Converter
 {
 public:
     // Constructor
@@ -18,10 +18,10 @@ public:
     ~StandardNFA_DFA_Converter() override;
 
     // Convert NFA to DFA
-    NFACTDFAConvertionResult convert_nfa_to_dfa(const nfa_model::NFA &nfa) override;
+    NFADFAConvertionResult convert_nfa_to_dfa(const nfa_model::NFA &nfa) override;
 };
 
-namespace std_nfa_ctdfa_converter_helper
+namespace std_nfa_dfa_converter_helper
 {
     struct NFAClosure
     {
@@ -43,9 +43,9 @@ namespace std_nfa_ctdfa_converter_helper
 namespace std
 {
     template <>
-    struct hash<std_nfa_ctdfa_converter_helper::NFAClosure>
+    struct hash<std_nfa_dfa_converter_helper::NFAClosure>
     {
-        size_t operator()(const std_nfa_ctdfa_converter_helper::NFAClosure &closure) const
+        size_t operator()(const std_nfa_dfa_converter_helper::NFAClosure &closure) const
         {
             return std::hash<std::string>()(closure.closure_name);
         }
@@ -53,7 +53,7 @@ namespace std
 }
 
 // other helper functions
-namespace std_nfa_ctdfa_converter_helper
+namespace std_nfa_dfa_converter_helper
 {
     // get the closure of a state
     NFAClosure get_state_closure(const nfa_model::NFA &nfa, const std::string &state);
@@ -74,7 +74,7 @@ namespace std_nfa_ctdfa_converter_helper
     NFADFABidirectionalMapping generate_state_mapping(const std::unordered_set<NFAClosure> &closure_set);
 
     // generate DFA transitions
-    std::unordered_map<std::string, std::multimap<std::string, std::string>> generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::ConflictTolerantDFA<std::string> &dfa);
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::DFA<std::string> &dfa);
 }
 
 #endif // !STANDARD_NFA_DFA_CONVERTER_H

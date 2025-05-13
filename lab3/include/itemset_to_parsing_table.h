@@ -4,7 +4,7 @@
 #include "lr_parsing_model.h"
 #include "nfa_model.h"
 #include "dfa_model.h"
-#include "standard_nfa_ctdfa_converter.h"
+#include "standard_nfa_dfa_converter.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -18,7 +18,7 @@ private:
     lr_parsing_model::ItemSet item_set;
     nfa_model::NFA nfa;
     lr_parsing_model::ItemSetNFAMapping item_set_nfa_mapping;
-    dfa_model::ConflictTolerantDFA<std::string> dfa;
+    dfa_model::DFA<std::string> dfa;
     lr_parsing_model::ItemSetDFAMapping item_set_dfa_mapping;
     lr_parsing_model::LRParsingTable parsing_table;
 

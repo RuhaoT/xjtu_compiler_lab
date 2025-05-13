@@ -388,7 +388,7 @@ lr_parsing_model::ItemSetDFAGenerationResult ItemSetToParsingTable::generate_dfa
         }
         // convert the NFA to DFA
         StandardNFA_DFA_Converter nfa_dfa_converter;
-        NFACTDFAConvertionResult conversion_result = nfa_dfa_converter.convert_nfa_to_dfa(nfa);
+        NFADFAConvertionResult conversion_result = nfa_dfa_converter.convert_nfa_to_dfa(nfa);
 
         // create mapping from ItemSet
         lr_parsing_model::ItemSetDFAMapping new_item_set_dfa_mapping;
@@ -429,7 +429,7 @@ lr_parsing_model::ItemSetDFAGenerationResult ItemSetToParsingTable::generate_dfa
         dfa = conversion_result.dfa;
         item_set_dfa_mapping = new_item_set_dfa_mapping;
         spdlog::debug("ItemSet DFA generation completed");
-        dfa_model_helper::check_conflict_tolerant_dfa_configuration<std::string>(dfa);
+        dfa_model_helper::check_dfa_configuration<std::string>(dfa);
         return {dfa, item_set_dfa_mapping};
     }
     catch (const std::exception &e)

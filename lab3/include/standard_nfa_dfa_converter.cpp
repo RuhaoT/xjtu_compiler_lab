@@ -1,4 +1,4 @@
-#include "standard_nfa_ctdfa_converter.h"
+#include "standard_nfa_dfa_converter.h"
 #include "nfa_model.h"
 #include "dfa_model.h"
 #include "spdlog/spdlog.h"
@@ -12,7 +12,7 @@
 StandardNFA_DFA_Converter::StandardNFA_DFA_Converter() = default;
 StandardNFA_DFA_Converter::~StandardNFA_DFA_Converter() = default;
 
-NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa_model::NFA &nfa)
+NFADFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa_model::NFA &nfa)
 {
     try
     {
@@ -24,16 +24,16 @@ NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa
             throw std::runtime_error(error_message);
         }
         // auxiliary variables
-        NFACTDFAConvertionResult result;
+        NFADFAConvertionResult result;
 
         // step 1: generate the closure set
-        std::unordered_set<std_nfa_ctdfa_converter_helper::NFAClosure> closure_set = std_nfa_ctdfa_converter_helper::generate_closure_set(nfa);
+        std::unordered_set<std_nfa_dfa_converter_helper::NFAClosure> closure_set = std_nfa_dfa_converter_helper::generate_closure_set(nfa);
 
         // step 2: generate the state mapping
-        NFADFABidirectionalMapping state_mapping = std_nfa_ctdfa_converter_helper::generate_state_mapping(closure_set);
+        NFADFABidirectionalMapping state_mapping = std_nfa_dfa_converter_helper::generate_state_mapping(closure_set);
 
         // step 3: build the DFA
-        dfa_model::ConflictTolerantDFA<std::string> dfa;
+        dfa_model::DFA<std::string> dfa;
         dfa.character_set = nfa.character_set;
         // iterate through the closure set and build the DFA states
         for (const auto &closure : closure_set)
@@ -54,11 +54,12 @@ NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa
             }
         }
         // step 4: generate the DFA transitions
-        std::unordered_map<std::string, std::multimap<std::string, std::string>> dfa_transitions = std_nfa_ctdfa_converter_helper::generate_dfa_transitions(nfa, state_mapping, dfa);
+        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> dfa_transitions = std_nfa_dfa_converter_helper::generate_dfa_transitions(nfa, state_mapping, dfa);
+        dfa.transitions = dfa_transitions;
 
         // step 5: check & finish the DFA
         // check the DFA configurations
-        dfa_model_helper::check_conflict_tolerant_dfa_configuration(dfa);
+        dfa_model_helper::check_dfa_configuration(dfa);
         // update the result
         result.dfa = dfa;
         result.state_mapping = state_mapping;
@@ -77,12 +78,13 @@ NFACTDFAConvertionResult StandardNFA_DFA_Converter::convert_nfa_to_dfa(const nfa
 }
 
 // helper functions
-std::string std_nfa_ctdfa_converter_helper::generate_unique_state_name(const std::unordered_set<std::string> &nfa_state_names)
+std::string std_nfa_dfa_converter_helper::generate_unique_state_name(const std::unordered_set<std::string> &nfa_state_names)
 {
     try
     {
         // generate a unique state name
         // design goal: as long as the state name set is unique, the state name is unique
+        // as long as the state set is the same, the state name is the same
         // use the simplest way: concatenate all state names with a separator
         std::string unique_state_name;
         unique_state_name += "[\n";
@@ -117,7 +119,7 @@ std::string std_nfa_ctdfa_converter_helper::generate_unique_state_name(const std
     }
 }
 
-std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_state_closure(const nfa_model::NFA &nfa, const std::string &state)
+std_nfa_dfa_converter_helper::NFAClosure std_nfa_dfa_converter_helper::get_state_closure(const nfa_model::NFA &nfa, const std::string &state)
 {
     try
     {
@@ -206,7 +208,7 @@ std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_s
     }
 }
 
-std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::merge_closures(const std::unordered_set<NFAClosure> &closures)
+std_nfa_dfa_converter_helper::NFAClosure std_nfa_dfa_converter_helper::merge_closures(const std::unordered_set<NFAClosure> &closures)
 {
     try
     {
@@ -234,7 +236,7 @@ std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::merge
     }
 }
 
-std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_state_set_closure(const nfa_model::NFA &nfa, const std::unordered_set<std::string> &states)
+std_nfa_dfa_converter_helper::NFAClosure std_nfa_dfa_converter_helper::get_state_set_closure(const nfa_model::NFA &nfa, const std::unordered_set<std::string> &states)
 {
     try
     {
@@ -257,8 +259,8 @@ std_nfa_ctdfa_converter_helper::NFAClosure std_nfa_ctdfa_converter_helper::get_s
     }
 }
 
-std::unordered_set<std_nfa_ctdfa_converter_helper::NFAClosure>
-std_nfa_ctdfa_converter_helper::generate_closure_set(const nfa_model::NFA &nfa)
+std::unordered_set<std_nfa_dfa_converter_helper::NFAClosure>
+std_nfa_dfa_converter_helper::generate_closure_set(const nfa_model::NFA &nfa)
 {
     try
     {
@@ -372,7 +374,7 @@ std_nfa_ctdfa_converter_helper::generate_closure_set(const nfa_model::NFA &nfa)
     }
 }
 
-NFADFABidirectionalMapping std_nfa_ctdfa_converter_helper::generate_state_mapping(const std::unordered_set<NFAClosure> &closure_set)
+NFADFABidirectionalMapping std_nfa_dfa_converter_helper::generate_state_mapping(const std::unordered_set<NFAClosure> &closure_set)
 {
     try
     {
@@ -404,53 +406,78 @@ NFADFABidirectionalMapping std_nfa_ctdfa_converter_helper::generate_state_mappin
     }
 }
 
-std::unordered_map<std::string, std::multimap<std::string, std::string>> std_nfa_ctdfa_converter_helper::generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::ConflictTolerantDFA<std::string> &dfa)
+std::unordered_map<std::string, std::unordered_map<std::string, std::string>> std_nfa_dfa_converter_helper::generate_dfa_transitions(const nfa_model::NFA &nfa, const NFADFABidirectionalMapping &state_mapping, dfa_model::DFA<std::string> &dfa)
 {
     try
     {
         spdlog::debug("Generating DFA transitions:");
-        std::unordered_map<std::string, std::multimap<std::string, std::string>> dfa_transitions;
-        // iterate through the NFA states
-        for (const auto &nfa_state : nfa.states)
+        std::unordered_map<std::string, std::unordered_map<std::string, std::string>> dfa_transitions;
+        int generated_transitions_count = 0;
+        // iterate through the DFA states
+        for (const auto &dfa_state : dfa.states_set)
         {
-            // find the corresponding DFA state
-            if (state_mapping.nfa_to_dfa_mapping.find(nfa_state) == state_mapping.nfa_to_dfa_mapping.end())
+            // iterate through the symbols in the DFA character set
+            for (const auto &symbol : dfa.character_set)
             {
-                std::string error_message = "The corresponding DFA state of NFA state " + nfa_state + " not found in state mapping";
-                spdlog::error(error_message);
-                throw std::runtime_error(error_message);
-            }
-            std::unordered_set dfa_states = state_mapping.nfa_to_dfa_mapping.at(nfa_state);
-            // iterate through the NFA transitions
-            // only need to check the non-epsilon transitions
-            // first check if the NFA state has any non-epsilon transitions
-            if (nfa.non_epsilon_transitions.find(nfa_state) == nfa.non_epsilon_transitions.end())
-            {
-                spdlog::debug("No non-epsilon transitions for NFA state {}", nfa_state);
-                continue;
-            }
-            for (const auto &transition : nfa.non_epsilon_transitions.at(nfa_state))
-            {
-                spdlog::debug("Processing transition: {}--{}-->{}", nfa_state, transition.first, transition.second);
-                std::string input_string = transition.first;
-                // find the corresponding DFA state
-                if (state_mapping.nfa_to_dfa_mapping.find(transition.second) == state_mapping.nfa_to_dfa_mapping.end())
+                // get the NFA states for the DFA state
+                std::unordered_set<std::string> nfa_states = state_mapping.dfa_to_nfa_mapping.at(dfa_state);
+                // mark the nfa states that have a transition for this symbol
+                std::unordered_set<std::string> nfa_states_has_transition;
+                // the nfa states that are reachable from the current nfa states at this symbol
+                std::unordered_set<std::string> reachable_nfa_states;
+                // iterate through the NFA states
+                for (const auto &nfa_state : nfa_states)
                 {
-                    std::string error_message = "The corresponding DFA state of NFA state " + transition.second + " not found in state mapping";
+                    // check if the NFA state has a transition for the symbol
+                    bool has_transition = false;
+                    if (nfa.non_epsilon_transitions.find(nfa_state) != nfa.non_epsilon_transitions.end())
+                    {
+                        if (nfa.non_epsilon_transitions.at(nfa_state).find(symbol) != nfa.non_epsilon_transitions.at(nfa_state).end())
+                        {
+                            has_transition = true;
+                        }
+                    }
+                    // if the NFA state has a transition for the symbol
+                    if (has_transition)
+                    {
+                        // add it to the NFA states that have a transition for this symbol
+                        nfa_states_has_transition.insert(nfa_state);
+                        // get the next state for the symbol
+                        std::string next_state = nfa.non_epsilon_transitions.at(nfa_state).at(symbol);
+                        // add the next state to the reachable NFA states
+                        reachable_nfa_states.insert(next_state);
+                        spdlog::debug("DFA state {} has NFA state {} with transition for symbol {} to NFA state {}", dfa_state, nfa_state, symbol, next_state);
+                    }
+                        
+                }
+                // now we have the reachable NFA states for the symbol, this set should precisely correspond to a DFA state
+                // check if the reachable NFA states are empty
+                if (reachable_nfa_states.empty())
+                {
+                    spdlog::debug("DFA state {} has no reachable NFA states for symbol {}", dfa_state, symbol);
+                    continue;
+                }
+                // get the closure for the reachable NFA states
+                NFAClosure reachable_closure = get_state_set_closure(nfa, reachable_nfa_states);
+                // check if the reachable closure is already in the DFA states
+                if (dfa.states_set.find(reachable_closure.closure_name) != dfa.states_set.end())
+                {
+                    // add the transition to the DFA transitions
+                    dfa_transitions[dfa_state].insert({symbol, reachable_closure.closure_name});
+                    spdlog::debug("DFA transition: {} --{}--> {}", dfa_state, symbol, reachable_closure.closure_name);
+                    // increment the generated transitions count
+                    generated_transitions_count++;
+                }
+                else
+                {
+                    // if the reachable closure is not in the DFA states, we need to add it
+                    std::string error_message = "DFA state " + dfa_state + " has a transition to a non-existing DFA state " + reachable_closure.closure_name;
                     spdlog::error(error_message);
                     throw std::runtime_error(error_message);
                 }
-                std::unordered_set dfa_next_states = state_mapping.nfa_to_dfa_mapping.at(transition.second);
-                // add the transition to the DFA transitions for each dfa_state and dfa_next_state
-                for (const auto& dfa_state: dfa_states)
-                {
-                    for (const auto&dfa_next_state :dfa_next_states)
-                    {
-                        dfa.add_transition(dfa_state,input_string,dfa_next_state);
-                    }
-                }
             }
         }
+        spdlog::debug("Generated {} DFA transitions", generated_transitions_count);
         return dfa_transitions;
     }
     catch (const std::exception &e)

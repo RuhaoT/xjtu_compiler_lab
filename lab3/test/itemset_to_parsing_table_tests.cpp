@@ -5,7 +5,7 @@
 #include "lr_parsing_model.h"
 #include "nfa_model.h"
 #include "dfa_model.h"
-#include "standard_nfa_ctdfa_converter.h"
+#include "standard_nfa_dfa_converter.h"
 #include "yaml_cfg_loader.h"
 #include "itemset_generator.h"
 #include "spdlog/spdlog.h"

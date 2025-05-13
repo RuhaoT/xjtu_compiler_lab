@@ -369,7 +369,7 @@ void visualization_helper::generate_nfa_dot_file(const nfa_model::NFA &nfa, cons
 }
 
 // generate dfa dot file, this is basically the same as nfa dot file, but without considering epsilon transitions
-void visualization_helper::generate_ctdfa_dot_file(const dfa_model::ConflictTolerantDFA<std::string> &dfa, const std::string &filename, bool generate_svg)
+void visualization_helper::generate_dfa_dot_file(const dfa_model::DFA<std::string> &dfa, const std::string &filename, bool generate_svg)
 {
     try
     {

@@ -43,7 +43,7 @@ add_executable(test_all
     include/yaml_config_frontend.cpp
     include/multitype_dfa_simulator.cpp
     include/itemset_to_parsing_table.cpp
-    include/standard_nfa_ctdfa_converter.cpp
+    include/standard_nfa_dfa_converter.cpp
     include/visualization_helper.cpp
     include/simple_lr_parsing_table_generator.cpp
     include/lr_parsing_model.cpp
