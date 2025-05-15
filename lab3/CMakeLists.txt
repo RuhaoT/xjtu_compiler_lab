@@ -49,11 +49,32 @@ add_executable(test_all
     include/lr_parsing_model.cpp
 )
 
+add_executable(frontend
+    frontend.cpp
+    include/nfa_model.cpp
+    include/yaml_cfg_loader.cpp
+    include/itemset_generator.cpp
+    include/yaml_config_frontend.cpp
+    include/multitype_dfa_simulator.cpp
+    include/itemset_to_parsing_table.cpp
+    include/standard_nfa_dfa_converter.cpp
+    include/visualization_helper.cpp
+    include/simple_lr_parsing_table_generator.cpp
+    include/lr_parsing_model.cpp
+)
+
 target_link_libraries(test_all
     gtest_main
     gtest
     spdlog::spdlog
     yaml-cpp
+)
+
+target_link_libraries(frontend
+    spdlog::spdlog
+    yaml-cpp
+    Boost::graph
+    tabulate::tabulate
 )
 
 add_custom_command(

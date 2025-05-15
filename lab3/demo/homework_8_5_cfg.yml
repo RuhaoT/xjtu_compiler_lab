@@ -1,0 +1,29 @@
+# S' -> T
+# T -> R | a T c
+# R -> ε | R b R
+cfg:
+  terminals:
+  - "a"
+  - "b"
+  - "c"
+  non_terminals:
+  - "T"
+  - "R"
+  initial_symbol: "T"
+  production_rules:
+  - lhs: "T"
+    rhs:
+    - "R"
+  - lhs: "T"
+    rhs:
+    - "a"
+    - "T"
+    - "c"
+  - lhs: "R"
+    rhs:
+    - ""
+  - lhs: "R"
+    rhs:
+    - "R"
+    - "b"
+    - "R"
