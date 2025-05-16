@@ -2,11 +2,11 @@
 #include <iostream>
 #include <fstream>
 
-YAMLConfigFrontend::YAMLConfigFrontend() : config(nullptr), is_loaded(false), is_checked(false) {}
+YAMLDFAConfigFrontend::YAMLDFAConfigFrontend() : config(nullptr), is_loaded(false), is_checked(false) {}
 
-YAMLConfigFrontend::~YAMLConfigFrontend() = default;
+YAMLDFAConfigFrontend::~YAMLDFAConfigFrontend() = default;
 
-bool YAMLConfigFrontend::LoadConfig(const std::string& filepath) {
+bool YAMLDFAConfigFrontend::LoadConfig(const std::string& filepath) {
     try {
         // 尝试打开文件
         std::ifstream file(filepath);
@@ -40,7 +40,7 @@ bool YAMLConfigFrontend::LoadConfig(const std::string& filepath) {
     }
 }
 
-bool YAMLConfigFrontend::CheckConfig() const {
+bool YAMLDFAConfigFrontend::CheckConfig() const {
     if (!is_loaded) {
         std::cerr << "Error: Configuration not loaded" << std::endl;
         return false;
@@ -98,7 +98,7 @@ bool YAMLConfigFrontend::CheckConfig() const {
     return true;
 }
 
-DFA YAMLConfigFrontend::ConstructDFA() const {
+DFA YAMLDFAConfigFrontend::ConstructDFA() const {
     if (!is_loaded) {
         std::cerr << "Error: Configuration not loaded" << std::endl;
         return DFA();
@@ -107,7 +107,7 @@ DFA YAMLConfigFrontend::ConstructDFA() const {
     return dfa;
 }
 
-bool YAMLConfigFrontend::ParseCharacterSet(const YAML::Node& node) {
+bool YAMLDFAConfigFrontend::ParseCharacterSet(const YAML::Node& node) {
     if (!node["character_set"] || !node["character_set"].IsSequence()) {
         std::cerr << "Error: Missing or invalid character_set" << std::endl;
         return false;
@@ -127,7 +127,7 @@ bool YAMLConfigFrontend::ParseCharacterSet(const YAML::Node& node) {
     return true;
 }
 
-bool YAMLConfigFrontend::ParseStatesSet(const YAML::Node& node) {
+bool YAMLDFAConfigFrontend::ParseStatesSet(const YAML::Node& node) {
     if (!node["states_set"] || !node["states_set"].IsSequence()) {
         std::cerr << "Error: Missing or invalid states_set" << std::endl;
         return false;
@@ -141,7 +141,7 @@ bool YAMLConfigFrontend::ParseStatesSet(const YAML::Node& node) {
     return true;
 }
 
-bool YAMLConfigFrontend::ParseInitialState(const YAML::Node& node) {
+bool YAMLDFAConfigFrontend::ParseInitialState(const YAML::Node& node) {
     if (!node["initial_state"] || !node["initial_state"].IsScalar()) {
         std::cerr << "Error: Missing or invalid initial_state" << std::endl;
         return false;
@@ -151,7 +151,7 @@ bool YAMLConfigFrontend::ParseInitialState(const YAML::Node& node) {
     return true;
 }
 
-bool YAMLConfigFrontend::ParseAcceptingStates(const YAML::Node& node) {
+bool YAMLDFAConfigFrontend::ParseAcceptingStates(const YAML::Node& node) {
     if (!node["accepting_states"] || !node["accepting_states"].IsSequence()) {
         std::cerr << "Error: Missing or invalid accepting_states" << std::endl;
         return false;
@@ -165,7 +165,7 @@ bool YAMLConfigFrontend::ParseAcceptingStates(const YAML::Node& node) {
     return true;
 }
 
-bool YAMLConfigFrontend::ParseTransitions(const YAML::Node& node) {
+bool YAMLDFAConfigFrontend::ParseTransitions(const YAML::Node& node) {
     if (!node["transitions"] || !node["transitions"].IsMap()) {
         std::cerr << "Error: Missing or invalid transitions" << std::endl;
         return false;

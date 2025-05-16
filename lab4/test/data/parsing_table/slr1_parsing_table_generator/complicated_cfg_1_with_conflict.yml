@@ -1,0 +1,41 @@
+# S' → E
+# E → E + T | T
+# T → T * F | F
+# F → (E) | id
+cfg:
+  terminals:
+  - "id"
+  - "+"
+  - "*"
+  - "("
+  - ")"
+  non_terminals:
+  - "E"
+  - "T"
+  - "F"
+  initial_symbol: "E"
+  production_rules:
+  - lhs: "E"
+    rhs:
+    - "E"
+    - "+"
+    - "T"
+  - lhs: "E"
+    rhs:
+    - "T"
+  - lhs: "T"
+    rhs:
+    - "T"
+    - "*"
+    - "F"
+  - lhs: "T"
+    rhs:
+    - "F"
+  - lhs: "F"
+    rhs:
+    - "("
+    - "E"
+    - ")"
+  - lhs: "F"
+    rhs:
+    - "id"

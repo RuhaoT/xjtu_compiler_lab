@@ -1,14 +1,14 @@
 #ifndef YAML_CONFIG_FRONTEND_H
 #define YAML_CONFIG_FRONTEND_H
 
-#include "config_frontend.h"
+#include "dfa_config_frontend.h"
 #include <yaml-cpp/yaml.h>
 #include <memory>
 
 class YAMLDFAConfigFrontend : public ConfigFrontend {
 private:
     std::unique_ptr<YAML::Node> config;
-    DFA dfa;
+    dfa_model::DFA<char> dfa;
     bool is_loaded;
     bool is_checked;
 
@@ -19,7 +19,7 @@ public:
     // 实现ConfigFrontend接口方法
     bool LoadConfig(const std::string& filepath) override;
     bool CheckConfig() const override;
-    DFA ConstructDFA() const override;
+    dfa_model::DFA<char> ConstructDFA() const override;
 
 private:
     // 辅助方法

@@ -1,0 +1,49 @@
+# S' → E
+# E → E + T | T
+# T → T * F | F
+# F → (E) | id
+cfg:
+  terminals:
+  - "id"
+  - "+"
+  - "*"
+  - "("
+  - ")"
+  non_terminals:
+  - "S"
+  - "E"
+  - "T"
+  - "F"
+  initial_symbol: "S"
+  production_rules:
+  # an epsilon production rule: E → ε
+  - lhs: "E"
+    rhs:
+    - "" # empty string represents epsilon
+  - lhs: "S"
+    rhs:
+    - "E"
+  - lhs: "E"
+    rhs:
+    - "E"
+    - "+"
+    - "T"
+  - lhs: "E"
+    rhs:
+    - "T"
+  - lhs: "T"
+    rhs:
+    - "T"
+    - "*"
+    - "F"
+  - lhs: "T"
+    rhs:
+    - "F"
+  - lhs: "F"
+    rhs:
+    - "("
+    - "E"
+    - ")"
+  - lhs: "F"
+    rhs:
+    - "id"

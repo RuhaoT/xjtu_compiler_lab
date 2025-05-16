@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "multitype_dfa_simulator.h"
-#include "yaml_config_frontend.h"
+#include "yaml_dfa_config_frontend.h"
 #include "testing_utils.h"
 #include "spdlog/spdlog.h"
 #include <fstream>
@@ -36,7 +36,7 @@ protected:
 
 TEST_F(MultiTypeDFASimulatorTests, TestUpdateDFA) {
     // Create a minimal DFA for testing
-    std::string filename = "test/data/multitype_dfa_simulator/dfa_config_real.yml";
+    std::string filename = "test/data/fsm/multitype_dfa_simulator/dfa_config_real.yml";
 
     // check if the file exists
     std::ifstream file(filename);

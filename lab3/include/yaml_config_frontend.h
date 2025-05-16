@@ -5,7 +5,7 @@
 #include <yaml-cpp/yaml.h>
 #include <memory>
 
-class YAMLConfigFrontend : public ConfigFrontend {
+class YAMLDFAConfigFrontend : public ConfigFrontend {
 private:
     std::unique_ptr<YAML::Node> config;
     dfa_model::DFA<char> dfa;
@@ -13,8 +13,8 @@ private:
     bool is_checked;
 
 public:
-    YAMLConfigFrontend();
-    ~YAMLConfigFrontend() override;
+    YAMLDFAConfigFrontend();
+    ~YAMLDFAConfigFrontend() override;
 
     // 实现ConfigFrontend接口方法
     bool LoadConfig(const std::string& filepath) override;

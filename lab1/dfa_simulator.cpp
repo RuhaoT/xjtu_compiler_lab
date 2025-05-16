@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     }
     
     // Create YAML configuration frontend
-    auto config_frontend = std::make_unique<YAMLConfigFrontend>();
+    auto config_frontend = std::make_unique<YAMLDFAConfigFrontend>();
     
     // Load configuration
     std::cout << "Loading DFA configuration from file: " << config_file << std::endl;
