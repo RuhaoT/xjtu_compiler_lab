@@ -67,3 +67,20 @@ TEST_F(SLR1ParsingTableGeneratorTests, TestGenerateParsingTableAndResolveConflic
     ASSERT_TRUE(parsing_table.filling_check()) << "Parsing table filling check failed";
     ASSERT_EQ(parsing_table.find_conflicts().size(), 0) << "Parsing table has conflicts";
 }
+
+TEST_F(SLR1ParsingTableGeneratorTests, TestGenerateParsingTableAndResolveConflicts_2)
+{
+    // Load the CFG from the YAML file
+    std::string filename = "test/data/parsing_table/slr1_parsing_table_generator/homework_8_4_cfg.yml";
+    cfg_model::CFG cfg = load_test_cfg(filename);
+
+    // Create an instance of SLR1ParsingTableGenerator
+    SLR1ParsingTableGenerator generator;
+
+    // Generate the parsing table
+    lr_parsing_model::LRParsingTable parsing_table = generator.generate_parsing_table(cfg);
+    // Check the parsing table
+    ASSERT_TRUE(parsing_table.filling_check()) << "Parsing table filling check failed";
+    ASSERT_EQ(parsing_table.find_conflicts().size(), 0) << "Parsing table has conflicts";
+}
+

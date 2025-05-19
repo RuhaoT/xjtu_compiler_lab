@@ -161,9 +161,34 @@ TEST_F(CFGAnalyzerTests, TestComputeFirstSet)
     verify_first_set(first_set, cfg, filename);
 }
 
+TEST_F(CFGAnalyzerTests, TestComputeFirstSet2)
+{
+    std::string filename = "test/data/cfg/cfg_analyzer/cfg_2.yml";
+
+    cfg_model::CFG cfg = load_test_cfg(filename);
+    cfg = itemset_generator_helper::expand_cfg(cfg);
+    CFGAnalyzer cfg_analyzer(cfg);
+    ASSERT_NO_THROW(cfg_analyzer.computeFirstSet());
+    cfg_model::FirstSet first_set = cfg_analyzer.getFirstSet();
+    verify_first_set(first_set, cfg, filename);
+}
+
 TEST_F(CFGAnalyzerTests, TestComputeFollowSet)
 {
     std::string filename = "test/data/cfg/cfg_analyzer/cfg_1.yml";
+
+    cfg_model::CFG cfg = load_test_cfg(filename);
+    cfg = itemset_generator_helper::expand_cfg(cfg);
+    CFGAnalyzer cfg_analyzer(cfg);
+    cfg_analyzer.computeFirstSet();
+    ASSERT_NO_THROW(cfg_analyzer.computeFollowSet());
+    cfg_model::FollowSet follow_set = cfg_analyzer.getFollowSet();
+    verify_follow_set(follow_set, cfg, filename);
+}
+
+TEST_F(CFGAnalyzerTests, TestComputeFollowSet2)
+{
+    std::string filename = "test/data/cfg/cfg_analyzer/cfg_2.yml";
 
     cfg_model::CFG cfg = load_test_cfg(filename);
     cfg = itemset_generator_helper::expand_cfg(cfg);

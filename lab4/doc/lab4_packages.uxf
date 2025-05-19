@@ -1,0 +1,29 @@
+<diagram program="umletino" version="15.1"><zoom_level>10</zoom_level><element><id>UMLPackage</id><coordinates><x>137</x><y>59</y><w>320</w><h>160</h></coordinates><panel_attributes>CFG
+--
+CFG Model Definition
+CFG Loader
+CFG Analyzer
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>527</x><y>59</y><w>320</w><h>160</h></coordinates><panel_attributes>FSM
+--
+NFA Model
+DFA Model
+DFA Simulator
+DFA Config Loader
+NFA to DFA Converter
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>137</x><y>289</y><w>320</w><h>160</h></coordinates><panel_attributes>ParsingTable
+--
+Parsing Model
+ItemSet Generator
+ItemSet to ParsingTable Converter
+SLR1 Conflict Resolver
+CFG ParsingTable Generator
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>377</x><y>549</y><w>320</w><h>160</h></coordinates><panel_attributes>Common
+--
+Visualization Helpler
+Testing Utilities
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>287</x><y>209</y><w>80</w><h>120</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;100;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>447</x><y>209</y><w>240</w><h>220</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;200;200;200;200;10</additional_attributes></element><element><id>Relation</id><coordinates><x>667</x><y>209</y><w>80</w><h>380</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;360;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>327</x><y>439</y><w>260</w><h>150</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>240;130;240;70;10;70;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>357</x><y>209</y><w>310</w><h>380</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>240;360;240;40;10;40;10;10</additional_attributes></element></diagram>

@@ -97,14 +97,9 @@ lr_parsing_model::LRParsingTable ItemSetToParsingTable::build_parsing_table()
                 // iterate over all items in the next state
                 for (const auto &item : items_in_next_state)
                 {
-                    // for terminal symbols, add a shift action as long as the item is not the end item
+                    // for terminal symbols, add a shift action
                     if (corresponding_symbol.is_terminal)
                     {
-                        if (item == item_set.end_item)
-                        {
-                            // skip the end item and accepting states
-                            continue;
-                        }
                         lr_parsing_model::Action shift_action;
                         shift_action.action_type = "shift";
                         shift_action.target_state = next_state;

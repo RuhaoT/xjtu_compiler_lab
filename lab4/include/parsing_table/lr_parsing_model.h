@@ -167,7 +167,7 @@ namespace lr_parsing_model
         bool filling_check() const;
 
         // find all the conflicts in the action table
-        std::unordered_map<std::string, cfg_model::symbol> find_conflicts() const;
+        std::multimap<std::string, cfg_model::symbol> find_conflicts() const;
     };
 
     // map each parsing table cell to a set of items

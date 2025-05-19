@@ -292,9 +292,9 @@ namespace lr_parsing_model
         return valid;
     }
 
-    std::unordered_map<std::string, cfg_model::symbol> LRParsingTable::find_conflicts() const
+    std::multimap<std::string, cfg_model::symbol> LRParsingTable::find_conflicts() const
     {
-        std::unordered_map<std::string, cfg_model::symbol> conflicts;
+        std::multimap<std::string, cfg_model::symbol> conflicts;
         int conflict_count = 0;
         for (const auto &state_pair : action_table)
         {
@@ -305,7 +305,7 @@ namespace lr_parsing_model
                 if (symbol_pair.second.size() > 1)
                 {
                     spdlog::warn("Conflict found in action table for state {} and symbol {}: {} actions", state, std::string(symbol), symbol_pair.second.size());
-                    conflicts[state] = symbol;
+                    conflicts.insert({state, symbol});
                     conflict_count++;
                 }
             }

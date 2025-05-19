@@ -53,9 +53,17 @@ lr_parsing_model::LRParsingTable SLR1ParsingTableGenerator::generate_parsing_tab
         {
             std::string error_msg = "The parsing table has conflicts and cannot be resolved.";
             spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
         }
         // Get the resolved parsing table
         auto resolved_parsing_table = conflict_resolver.get_solved_parsing_table();
+
+        if (resolved_parsing_table.find_conflicts().size() > 0)
+        {
+            std::string error_msg = "The parsing table has unresolved conflicts.";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
 
         return resolved_parsing_table;
     }

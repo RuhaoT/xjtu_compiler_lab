@@ -26,12 +26,16 @@ bool SLR1ConflictResolver::resolve_conflicts()
         resolved_parsing_table.action_table = parsing_table.action_table;
         resolved_parsing_table.goto_table = parsing_table.goto_table;
         // get the conflicts in the parsing table
-        auto conflicts = resolved_parsing_table.find_conflicts();
+        auto conflicts = parsing_table.find_conflicts();
         // check if there are any conflicts
         if (conflicts.empty())
         {
             spdlog::debug("No conflicts found in the parsing table");
             return true; // no conflicts to resolve
+        }
+        else
+        {
+            spdlog::debug("Found {} conflicts in the parsing table", conflicts.size());
         }
         // conflict solving preparation: find the follow sets
         CFGAnalyzer cfg_analyzer(cfg);
@@ -53,8 +57,8 @@ bool SLR1ConflictResolver::resolve_conflicts()
             spdlog::debug("Found {} shift symbols in the conflict", shift_symbols_count);
             // for clarity we iterate over the items two times, one for checking the conflict and one for resolving it
             // check if the conflict is resolvable by checking the intersection of the shift symbols and the follow sets of accepting items
-            std::unordered_set<cfg_model::symbol> total_symbols;
-            int expected_total_symbols_count = 0;
+            std::unordered_set<cfg_model::symbol> total_symbols = shift_symbols;
+            int expected_total_symbols_count = shift_symbols.size();
             for (const auto &item : items_in_conflict)
             {
                 // check if the item is accepting
@@ -129,7 +133,6 @@ bool SLR1ConflictResolver::resolve_conflicts()
                         // add the reduce action to the parsing table
                         resolved_parsing_table.add_action(state, symbol, reduce_action);
                         spdlog::debug("Added reduce action for state {} and symbol {}", state, std::string(symbol));
-                        break; // break out of the loop after resolving the conflict
                     }
                 }
             }

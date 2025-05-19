@@ -1,0 +1,61 @@
+# S' -> P
+# P -> D1 S1
+# D1 -> ε | D1 D2 ;
+# D2 -> int d
+# S1 -> ε | S2 ; S1
+# S2 -> d = E
+# E -> d | E + i
+cfg:
+  terminals:
+  - "int"
+  - "d"
+  - "="
+  - "+"
+  - "i"
+  - ";"
+  non_terminals:
+  - "P"
+  - "D1"
+  - "D2"
+  - "S1"
+  - "S2"
+  - "E"
+  initial_symbol: "P"
+  production_rules:
+  - lhs: "P"
+    rhs:
+    - "D1"
+    - "S1"
+  - lhs: "D1"
+    rhs:
+    - "D1"
+    - "D2"
+    - ";"
+  - lhs: "D1"
+    rhs:
+    - ""
+  - lhs: "D2"
+    rhs:
+    - "int"
+    - "d"
+  - lhs: "S1"
+    rhs:
+    - "S2"
+    - ";"
+    - "S1"
+  - lhs: "S1"
+    rhs:
+    - ""
+  - lhs: "S2"
+    rhs:
+    - "d"
+    - "="
+    - "E"
+  - lhs: "E"
+    rhs:
+    - "d"
+  - lhs: "E"
+    rhs:
+    - "E"
+    - "+"
+    - "i"
