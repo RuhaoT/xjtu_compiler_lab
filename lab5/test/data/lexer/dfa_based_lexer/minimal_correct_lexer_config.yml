@@ -1,0 +1,19 @@
+token_types:
+
+- name: "TEST"
+  priority: 1
+  has_content: true
+
+dfas:
+- name: "TEST"
+  character_set: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "abcde"
+  - from: "q1"
+    to: "q1"
+    character: "Z"

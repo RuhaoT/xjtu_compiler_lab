@@ -149,6 +149,7 @@ namespace lr_parsing_model
         std::unordered_set<std::string> all_states;                                                                         // all states in the parsing table
         std::unordered_map<std::string, std::unordered_map<cfg_model::symbol, std::unordered_set<Action>>> action_table;    // conflict tolerant action table
         std::unordered_map<std::string, std::unordered_map<cfg_model::symbol, std::unordered_set<std::string>>> goto_table; // goto table, conflict tolerant
+        std::string start_state; // the start state of the parsing table
 
         bool add_action(const std::string &state, const cfg_model::symbol &symbol, const Action &action);
 

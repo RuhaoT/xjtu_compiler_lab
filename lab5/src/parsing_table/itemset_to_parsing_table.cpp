@@ -222,7 +222,22 @@ lr_parsing_model::LRParsingTable ItemSetToParsingTable::build_parsing_table()
             }
         }
         spdlog::debug("Patched {} empty cells in the parsing table", patched_cells);
-        // 6. return the parsing table & update the class member variable
+        // 6. find the start state and append to the parsing table
+        // the start state is the state that corresponds to the start item in the item set
+        std::unordered_set<std::string> start_item_states;
+        start_item_states = item_set_dfa_mapping.item_set_to_dfa_state.at(item_set.start_item);
+        // there should be only one start item state, otherwise, it's an error
+        if (start_item_states.size() != 1)
+        {
+            std::string error_msg = "Error: Start item state not found or multiple start item states found";
+            spdlog::error(error_msg);
+            throw std::runtime_error(error_msg);
+        }
+        std::string start_item_state = *start_item_states.begin();
+        // add the start state to the parsing table
+        new_parsing_table.start_state = start_item_state;
+        spdlog::debug("Start state of the parsing table: {}", start_item_state);
+        // 7. return the parsing table & update the class member variable
         spdlog::debug("Parsing table built successfully, with {} states and {} symbols", new_parsing_table.all_states.size(), new_parsing_table.all_symbols.size());
         for (const auto &state : new_parsing_table.all_states)
         {

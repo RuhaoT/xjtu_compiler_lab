@@ -1,0 +1,21 @@
+token_types:
+
+- name: "IDENTIFIER"
+  priority: 1
+  has_content: true
+
+- name: "NUMBER"
+  priority: 2
+  has_content: true
+
+- name: "OPERATOR"
+  priority: 3
+  has_content: false
+
+regexps:
+- regexp: "^[a-z]+$"
+  token_type: "IDENTIFIER"
+- regexp: "^[0-9]+$"
+  token_type: "NUMBER"
+- regexp: "D"
+  token_type: "OPERATOR"

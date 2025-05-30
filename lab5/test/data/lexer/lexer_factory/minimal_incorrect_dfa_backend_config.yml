@@ -1,0 +1,13 @@
+dfas:
+- name: "IDENTIFIER"
+  character_set: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "abcde0"
+  - from: "q1"
+    to: "q1"
+    character: "Z"

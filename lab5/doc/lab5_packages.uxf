@@ -1,0 +1,47 @@
+<diagram program="umletino" version="15.1"><zoom_level>7</zoom_level><element><id>UMLPackage</id><coordinates><x>0</x><y>91</y><w>224</w><h>112</h></coordinates><panel_attributes>CFG
+--
+CFG Model Definition
+CFG Loader
+CFG Analyzer
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>273</x><y>91</y><w>224</w><h>112</h></coordinates><panel_attributes>FSM
+--
+NFA Model
+DFA Model
+DFA Simulator
+DFA Config Loader
+NFA to DFA Converter
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>0</x><y>252</y><w>224</w><h>112</h></coordinates><panel_attributes>ParsingTable
+--
+Parsing Model
+ItemSet Generator
+ItemSet to ParsingTable Converter
+SLR1 Conflict Resolver
+CFG ParsingTable Generator
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>168</x><y>595</y><w>224</w><h>112</h></coordinates><panel_attributes>Common
+--
+Visualization Helpler
+Testing Utilities
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>105</x><y>196</y><w>56</w><h>84</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;100;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>217</x><y>196</y><w>168</w><h>154</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;200;200;200;200;10</additional_attributes></element><element><id>Relation</id><coordinates><x>371</x><y>196</y><w>56</w><h>427</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;590;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>133</x><y>357</y><w>217</w><h>266</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>240;360;240;70;10;70;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>196</x><y>196</y><w>175</w><h>427</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>180;590;180;40;10;40;10;10</additional_attributes></element><element><id>UMLPackage</id><coordinates><x>427</x><y>259</y><w>224</w><h>112</h></coordinates><panel_attributes>Lexer
+--
+Token Model
+Token Loader
+DFA Based Lexer
+Flex Based Lexer
+YAML Lexer Factory
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>147</y><w>161</w><h>140</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>160;180;160;10;10;10</additional_attributes></element><element><id>UMLPackage</id><coordinates><x>427</x><y>434</y><w>224</w><h>112</h></coordinates><panel_attributes>SyntaxSemanticAnalyzer
+--
+Syntax Semantic Model
+Semantic Loader
+Syntax Analyzer
+Semanic Analyzer
+halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>56</x><y>357</y><w>385</w><h>154</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>530;200;10;200;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>161</x><y>196</y><w>280</w><h>301</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>380;410;120;410;120;60;10;60;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>574</x><y>364</y><w>56</w><h>98</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;120;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>385</x><y>539</y><w>210</w><h>133</h></coordinates><panel_attributes>lt=.&gt;
+&lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>10;170;280;170;280;10</additional_attributes></element></diagram>

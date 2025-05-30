@@ -5,6 +5,8 @@
 #include "cfg_model.h"
 #include "nfa_model.h"
 #include "dfa_model.h"
+#include "syntax_semantic_analyzer/symbol_table.h"
+#include "syntax_semantic_analyzer/syntax_semantic_model.h"
 #include "lr_parsing_model.h"
 #include "tabulate/table.hpp"
 #include "boost/graph/adjacency_list.hpp"
@@ -23,5 +25,7 @@ namespace visualization_helper
     void generate_nfa_dot_file(const nfa_model::NFA &nfa, const std::string &filename, bool generate_svg = false);
 
     void generate_dfa_dot_file(const dfa_model::DFA<std::string> &dfa, const std::string &filename, bool generate_svg = false);
+
+    void pretty_print_symbol_table(const SymbolTable &symbol_table_manager);
 }
 #endif // !VISUALIZATION_HELPER_H

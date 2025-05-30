@@ -1,0 +1,27 @@
+token_types:
+
+- name: "IDENTIFIER"
+  priority: 1
+  has_content: true
+
+- name: "NUMBER"
+  priority: 2
+  has_content: true
+
+- name: "OPERATOR"
+  priority: 3
+  has_content: false
+
+dfas:
+- name: "TEST"
+  character_set: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "abcde"
+  - from: "q1"
+    to: "q1"
+    character: "Z"

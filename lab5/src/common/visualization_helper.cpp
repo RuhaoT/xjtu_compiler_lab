@@ -13,6 +13,9 @@
 #include <map> // For std::map (used in property maps)
 #include <cstdlib> // For std::system (if using generate_svg)
 #include <boost/property_map/dynamic_property_map.hpp> // For boost::dynamic_properties
+#include "syntax_semantic_analyzer/symbol_table.h" // Ensure this path is correct
+#include "syntax_semantic_analyzer/ast_model.h"   // Ensure this path is correct
+#include "syntax_semantic_analyzer/syntax_semantic_model.h" // Ensure this path is correct
 
 void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LRParsingTable &parsing_table)
 {
@@ -203,6 +206,9 @@ void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LR
     std::cout << table_state_index << std::endl;
     std::cout << "Production Index Table:" << std::endl;
     std::cout << table_production_index << std::endl;
+
+    // print the start state
+    std::cout << "Start State: " << parsing_table.start_state << std::endl;
 }
     catch (const std::exception &e)
     {
@@ -492,5 +498,75 @@ void visualization_helper::generate_dfa_dot_file(const dfa_model::DFA<std::strin
         std::string error_message = "Error generating DFA .dot file: ";
         error_message += e.what();
         spdlog::error(error_message);
+    }
+};
+
+void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_table_manager) {
+    try {
+        tabulate::Table symbol_table_viz;
+        symbol_table_viz.add_row({"Symbol Name", "Data Type", "Kind", "Scope ID", "Memory Size (bytes)", "Other Attributes"});
+
+        // set
+        for (const syntax_semantic_model::SymbolEntry &entry : symbol_table_manager.symbols) {
+            
+            tabulate::Table::Row_t row_data;
+            row_data.push_back(entry.symbol_name);
+            row_data.push_back(entry.data_type);
+
+            std::string kind_str;
+            std::stringstream other_attrs_ss;
+
+            switch (entry.symbol_type) {
+                case syntax_semantic_model::SymbolType::Variable:
+                    kind_str = "Variable";
+                    // 普通变量通常没有额外的 "Other Attributes" 在此级别显示
+                    break;
+                case syntax_semantic_model::SymbolType::Function:
+                    kind_str = "Function";
+                    other_attrs_ss << "Args: [";
+                    if (entry.arg_list.has_value()) {
+                        for (size_t i = 0; i < entry.arg_list->size(); ++i) {
+                            other_attrs_ss << entry.arg_list.value()[i]; // arg_list 存储参数名
+                            if (i < entry.arg_list->size() - 1) other_attrs_ss << ", ";
+                        }
+                    }
+                    other_attrs_ss << "]";
+                    if (entry.direct_child_scope.has_value()) {
+                         other_attrs_ss << ", BodyScopeID: " << entry.direct_child_scope.value();
+                    } else {
+                         other_attrs_ss << ", BodyScopeID: N/A";
+                    }
+                    break;
+                case syntax_semantic_model::SymbolType::Array:
+                    kind_str = "Array";
+                    if (entry.array_length.has_value()) {
+                        other_attrs_ss << "Length: " << entry.array_length.value();
+                    } else {
+                        other_attrs_ss << "Length: N/A";
+                    }
+                    break;
+                // Add other cases for other symbol types if they exist
+                default:
+                    kind_str = "Unknown";
+                    break;
+            }
+
+            row_data.push_back(kind_str);
+            row_data.push_back(std::to_string(entry.scope_id));
+            row_data.push_back(std::to_string(entry.memory_size));
+            row_data.push_back(other_attrs_ss.str());
+            
+            symbol_table_viz.add_row(row_data);
+        }
+
+        std::cout << "\\nSymbol Table:" << std::endl;
+        std::cout << symbol_table_viz << std::endl;
+        spdlog::debug("Symbol table visualization completed.");
+
+    } catch (const std::exception &e) {
+        std::string error_message = "Error visualizing symbol table: ";
+        error_message += e.what();
+        spdlog::error(error_message);
+        // 可以选择不抛出异常，仅记录错误
     }
 }

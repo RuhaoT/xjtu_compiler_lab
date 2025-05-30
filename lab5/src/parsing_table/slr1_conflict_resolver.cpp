@@ -25,6 +25,7 @@ bool SLR1ConflictResolver::resolve_conflicts()
         resolved_parsing_table.all_states = parsing_table.all_states;
         resolved_parsing_table.action_table = parsing_table.action_table;
         resolved_parsing_table.goto_table = parsing_table.goto_table;
+        resolved_parsing_table.start_state = parsing_table.start_state;
         // get the conflicts in the parsing table
         auto conflicts = parsing_table.find_conflicts();
         // check if there are any conflicts
