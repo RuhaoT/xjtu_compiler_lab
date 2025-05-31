@@ -1,0 +1,564 @@
+vars: &vars
+  - var_a_to_z: &var_a_to_z "abcdefghijklmnopqrstuvwxyz"
+  - var_A_to_Z: &var_A_to_Z "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - var_0_to_9: &var_0_to_9 "0123456789"
+  - var_id_char: &var_id_char "abcdefghijklmnopqrstuvwxyz0123456789"
+  - var_num_char: &var_num_char "0123456789+-"
+  - var_float_char: &var_float_char "0123456789+-."
+
+token_types:
+- name: "ID"
+  priority: 41
+  has_content: true
+- name: "NUM"
+  priority: 31
+  has_content: true
+- name: "FLO"
+  priority: 32
+  has_content: true
+- name: "ADD"
+  priority: 21
+  has_content: false
+- name: "MUL"
+  priority: 22
+  has_content: false
+- name: "ROP"
+  priority: 23
+  has_content: true
+- name: "ASG"
+  priority: 24
+  has_content: false
+- name: "LPA"
+  priority: 11
+  has_content: false
+- name: "RPA"
+  priority: 12
+  has_content: false
+- name: "LBK"
+  priority: 13
+  has_content: false
+- name: "RBK"
+  priority: 14
+  has_content: false
+- name: "LBR"
+  priority: 15
+  has_content: false
+- name: "RBR"
+  priority: 16
+  has_content: false
+- name: "CMA"
+  priority: 17
+  has_content: false
+- name: "SCO"
+  priority: 18
+  has_content: false
+- name: "INT"
+  priority: 1
+  has_content: false
+- name: "FLOAT"
+  priority: 2
+  has_content: false
+- name: "IF"
+  priority: 3
+  has_content: false
+- name: "ELSE"
+  priority: 4
+  has_content: false
+- name: "WHILE"
+  priority: 5
+  has_content: false
+- name: "RETURN"
+  priority: 6
+  has_content: false
+- name: "INPUT"
+  priority: 7
+  has_content: false
+- name: "PRINT"
+  priority: 8
+  has_content: false
+- name: "VOID"
+  priority: 9
+  has_content: false
+
+dfas:
+- name: "FLO"
+  character_set: *var_float_char
+  states_set: [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" ]
+  initial_state: "A"
+  accepting_states: [ "G", "H", "I", "J", "K" ]
+  transitions:
+  - from: "A"
+    to: "B"
+    character: "+"
+  - from: "A"
+    to: "C"
+    character: "-"
+  - from: "A"
+    to: "D"
+    character: *var_0_to_9
+  - from: "A"
+    to: "E"
+    character: "."
+  - from: "B"
+    to: "D"
+    character: *var_0_to_9
+  - from: "B"
+    to: "E"
+    character: "."
+  - from: "C"
+    to: "D"
+    character: *var_0_to_9
+  - from: "C"
+    to: "E"
+    character: "."
+  - from: "D"
+    to: "F"
+    character: *var_0_to_9
+  - from: "D"
+    to: "G"
+    character: "."
+  - from: "E"
+    to: "H"
+    character: *var_0_to_9
+  - from: "F"
+    to: "F"
+    character: *var_0_to_9
+  - from: "F"
+    to: "G"
+    character: "."
+  - from: "G"
+    to: "I"
+    character: *var_0_to_9
+  - from: "H"
+    to: "J"
+    character: *var_0_to_9
+  - from: "I"
+    to: "K"
+    character: *var_0_to_9
+  - from: "J"
+    to: "J"
+    character: *var_0_to_9
+  - from: "K"
+    to: "K"
+    character: *var_0_to_9
+
+- name: "ID"
+  character_set: *var_id_char
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: *var_a_to_z
+  - from: "q1"
+    to: "q1"
+    character: *var_0_to_9
+  - from: "q1"
+    to: "q1"
+    character: *var_a_to_z
+
+- name: "NUM"
+  character_set: *var_num_char
+  states_set: [ "A", "B", "C", "D" ]
+  initial_state: "A"
+  accepting_states: [ "D" ]
+  transitions:
+  - from: "A"
+    to: "B"
+    character: "+"
+  - from: "A"
+    to: "C"
+    character: "-"
+  - from: "A"
+    to: "D"
+    character: *var_0_to_9
+  - from: "B"
+    to: "D"
+    character: *var_0_to_9
+  - from: "C"
+    to: "D"
+    character: *var_0_to_9
+  - from: "D"
+    to: "D"
+    character: *var_0_to_9
+
+- name: "ADD"
+  character_set: "+"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "+"
+
+- name: "MUL"
+  character_set: "*"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "*"
+
+- name: "ROP"
+  character_set: "<="
+  states_set: [ "q0", "q1", "q2", "q3" ]
+  initial_state: "q0"
+  accepting_states: [ "q1", "q3" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "<"
+  - from: "q0"
+    to: "q2"
+    character: "="
+  - from: "q1"
+    to: "q3"
+    character: "="
+  - from: "q2"
+    to: "q3"
+    character: "="
+
+- name: "ASG"
+  character_set: "\\="
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: "="
+
+- name: "LPA"
+  character_set: "\\("
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: "("
+
+- name: "RPA"
+  character_set: "\\)"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: ")"
+
+- name: "LBK"
+  character_set: "["
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "["
+
+- name: "RBK"
+  character_set: "]"
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "]"
+
+- name: "LBR"
+  character_set: "\\{"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: "{"
+
+- name: "RBR"
+  character_set: "\\}"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: "}"
+
+- name: "CMA"
+  character_set: "\\,"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: ","
+
+- name: "SCO"
+  character_set: "\\;"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: ";"
+
+- name: "INT"
+  character_set: "int"
+  states_set: [ "q0", "q1", "q2", "q3" ]
+  initial_state: "q0"
+  accepting_states: [ "q3" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "i"
+  - from: "q1"
+    to: "q2"
+    character: "n"
+  - from: "q2"
+    to: "q3"
+    character: "t"
+
+- name: "FLOAT"
+  character_set: "float"
+  states_set: [ "q0", "q1", "q2", "q3", "q4", "q5" ]
+  initial_state: "q0"
+  accepting_states: [ "q5" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "f"
+  - from: "q1"
+    to: "q2"
+    character: "l"
+  - from: "q2"
+    to: "q3"
+    character: "o"
+  - from: "q3"
+    to: "q4"
+    character: "a"
+  - from: "q4"
+    to: "q5"
+    character: "t"
+
+- name: "IF"
+  character_set: "if"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "i"
+  - from: "q1"
+    to: "q2"
+    character: "f"
+
+- name: "ELSE"
+  character_set: "else"
+  states_set: [ "q0", "q1", "q2", "q3", "q4" ]
+  initial_state: "q0"
+  accepting_states: [ "q4" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "e"
+  - from: "q1"
+    to: "q2"
+    character: "l"
+  - from: "q2"
+    to: "q3"
+    character: "s"
+  - from: "q3"
+    to: "q4"
+    character: "e"
+
+- name: "WHILE"
+  character_set: "while"
+  states_set: [ "q0", "q1", "q2", "q3", "q4", "q5" ]
+  initial_state: "q0"
+  accepting_states: [ "q5" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "w"
+  - from: "q1"
+    to: "q2"
+    character: "h"
+  - from: "q2"
+    to: "q3"
+    character: "i"
+  - from: "q3"
+    to: "q4"
+    character: "l"
+  - from: "q4"
+    to: "q5"
+    character: "e"
+
+- name: "RETURN"
+  character_set: "return"
+  states_set: [ "q0", "q1", "q2", "q3", "q4", "q5", "q6" ]
+  initial_state: "q0"
+  accepting_states: [ "q6" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "r"
+  - from: "q1"
+    to: "q2"
+    character: "e"
+  - from: "q2"
+    to: "q3"
+    character: "t"
+  - from: "q3"
+    to: "q4"
+    character: "u"
+  - from: "q4"
+    to: "q5"
+    character: "r"
+  - from: "q5"
+    to: "q6"
+    character: "n"
+
+- name: "INPUT"
+  character_set: "input"
+  states_set: [ "q0", "q1", "q2", "q3", "q4", "q5" ]
+  initial_state: "q0"
+  accepting_states: [ "q5" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "i"
+  - from: "q1"
+    to: "q2"
+    character: "n"
+  - from: "q2"
+    to: "q3"
+    character: "p"
+  - from: "q3"
+    to: "q4"
+    character: "u"
+  - from: "q4"
+    to: "q5"
+    character: "t"
+
+- name: "PRINT"
+  character_set: "print"
+  states_set: [ "q0", "q1", "q2", "q3", "q4", "q5" ]
+  initial_state: "q0"
+  accepting_states: [ "q4" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "p"
+  - from: "q1"
+    to: "q2"
+    character: "r"
+  - from: "q2"
+    to: "q3"
+    character: "i"
+  - from: "q3"
+    to: "q4"
+    character: "n"
+  - from: "q4"
+    to: "q5"
+    character: "t"
+
+- name: "VOID"
+  character_set: "void"
+  states_set: [ "q0", "q1", "q2", "q3", "q4" ]
+  initial_state: "q0"
+  accepting_states: [ "q4" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "v"
+  - from: "q1"
+    to: "q2"
+    character: "o"
+  - from: "q2"
+    to: "q3"
+    character: "i"
+  - from: "q3"
+    to: "q4"
+    character: "d"
+
+regexps:
+- regexp: "^[a-z][a-z||0-9]*$" # flex regex syntax
+  token_type: "ID"
+- regexp: "^[+-]?[0-9]+$"
+  token_type: "NUM"
+- regexp: "^([+-]?[0-9]*\\.[0-9]+)|([+-]?[0-9]+\\.[0-9]*)$"
+  token_type: "FLO"
+- regexp: "^\\+$"
+  token_type: "ADD"
+- regexp: "^\\*$"
+  token_type: "MUL"
+- regexp: "^[(<)||[(<=)||(==)]]$"
+  token_type: "ROP"
+- regexp: "^\\\\=$"
+  token_type: "ASG"
+- regexp: "^\\\\\\($"
+  token_type: "LPA"
+- regexp: "^\\\\\\)$"
+  token_type: "RPA"
+- regexp: "^\\\\\\[$"
+  token_type: "LBK"
+- regexp: "^\\\\\\]$"
+  token_type: "RBK"
+- regexp: "^\\\\\\{$"
+  token_type: "LBR"
+- regexp: "^\\\\\\}$"
+  token_type: "RBR"
+- regexp: "^\\\\,$"
+  token_type: "CMA"
+- regexp: "^\\\\;$"
+  token_type: "SCO"
+- regexp: "^int$"
+  token_type: "INT"
+- regexp: "^float$"
+  token_type: "FLOAT"
+- regexp: "^if$"
+  token_type: "IF"
+- regexp: "^else$"
+  token_type: "ELSE"
+- regexp: "^while$"
+  token_type: "WHILE"
+- regexp: "^return$"
+  token_type: "RETURN"
+- regexp: "^input$"
+  token_type: "INPUT"
+- regexp: "^print$"
+  token_type: "PRINT"
+- regexp: "^void$"
+  token_type: "VOID"
