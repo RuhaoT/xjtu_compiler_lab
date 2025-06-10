@@ -10,6 +10,6 @@
 #include <vector>
 #include <fstream>
 
-syntax_semantic_model::ProductionInfoMapping load_semantic_info(const std::string& file_path);
+syntax_semantic_model::ProductionInfoMapping load_semantic_info(const std::string& filename, cfg_model::CFG& target_cfg);
 
 #endif // !LEXER_TOKEN_LOADER_H

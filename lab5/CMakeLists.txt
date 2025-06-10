@@ -140,7 +140,7 @@ target_link_libraries(test_utils PUBLIC
 include(FetchContent)
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(googletest)
@@ -214,5 +214,5 @@ target_link_libraries(frontend PRIVATE
 )
 
 # Optional: Set C++ standard if not already set elsewhere
-# set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
