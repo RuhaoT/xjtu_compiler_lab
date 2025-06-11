@@ -7,6 +7,7 @@
 #include "itemset_generator.h"
 #include <memory>
 #include <string>
+#include <stdexcept>
 
 // register the global environment
 std::shared_ptr<spdlog::logger> LoggingEnvironment::logger = nullptr;
@@ -30,6 +31,12 @@ std::shared_ptr<spdlog::logger> init_fixture_logger(const std::string &log_filen
         spdlog::register_logger(logger);
         // !!! set the logger as the default logger
         spdlog::set_default_logger(logger);
+    }
+    else {
+        // the last logger is not dropped properly, throw an error
+        std::string error_message = "Logger with name '" + std::string(GTEST_LOGGER_NAME) + "' already exists. Please release the logger before initializing a new one.";
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
     }
 
     return logger;

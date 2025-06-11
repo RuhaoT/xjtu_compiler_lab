@@ -120,18 +120,13 @@ target_link_libraries(viz_utils PUBLIC
 add_library(test_utils STATIC
     src/common/testing_utils.cpp
 )
-target_include_directories(test_utils PUBLIC
-    ${gtest_SOURCE_DIR}/include
-)
 # this library requires all previous libraries
 target_link_libraries(test_utils PUBLIC
     cfg_utils
     fsm_utils
     parsing_table_utils
-    viz_utils
     lexer_utils
-    syntax_semantic_analyzer_utils
-    spdlog::spdlog
+    viz_utils
     gtest
 )
 
@@ -175,11 +170,12 @@ target_link_libraries(test_all PRIVATE
     cfg_utils
     fsm_utils
     parsing_table_utils
+    lexer_utils
+    syntax_semantic_analyzer_utils
     viz_utils
     test_utils
     gtest_main
     gtest
-    syntax_semantic_analyzer_utils
     spdlog::spdlog # Assuming tests might use logging
     # yaml-cpp is linked via cfg_utils
 )
@@ -206,13 +202,13 @@ target_link_libraries(frontend PRIVATE
     cfg_utils
     fsm_utils
     parsing_table_utils
-    viz_utils
     lexer_utils
     syntax_semantic_analyzer_utils
+    viz_utils
     spdlog::spdlog
     # yaml-cpp, Boost::graph, tabulate::tabulate are linked via component libs
 )
 
 # Optional: Set C++ standard if not already set elsewhere
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_STANDARD_REQUIRED True)

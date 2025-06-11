@@ -14,6 +14,11 @@ protected:
         init_fixture_logger(test_log_file);
     }
 
+    static void TearDownTestSuite() {
+        // Release the logger after all tests in the suite have run
+        release_fixture_logger();
+    }
+
     void SetUp() override {
         add_test_start_log(::testing::UnitTest::GetInstance()->current_test_info()->name());
     }
