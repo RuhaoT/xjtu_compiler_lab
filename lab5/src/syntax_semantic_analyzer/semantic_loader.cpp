@@ -44,7 +44,7 @@ syntax_semantic_model::ProductionInfoMapping load_semantic_info(const std::strin
                     // load the rhs symbol into the vector
                     cfg_model::symbol temp_symbol;
                     temp_symbol.name = rhs.as<std::string>();
-                    temp_symbol.is_terminal = false; // default is non-terminal
+                    temp_symbol.is_terminal = true; // first assume it's a terminal
                     temp_symbol.special_property = ""; // default is empty
                     // find the symbol in the target_cfg
                     auto it = target_cfg.terminals.find(temp_symbol);
@@ -56,6 +56,7 @@ syntax_semantic_model::ProductionInfoMapping load_semantic_info(const std::strin
                     }
                     else
                     {
+                        temp_symbol.is_terminal = false; // it's not a terminal, so it must be a non-terminal
                         it = target_cfg.non_terminals.find(temp_symbol);
                         if (it == target_cfg.non_terminals.end())
                         {

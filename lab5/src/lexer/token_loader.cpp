@@ -53,6 +53,7 @@ void TokenLoader::load_from_file(const std::string& filename) {
             trim_spaces(value_str);
 
             Token token{type_str, value_str};
+            spdlog::debug("Loaded token: Type = {}, Value = {}", token.type, token.value);
             loaded_tokens.push_back(token);
         }
 
@@ -69,6 +70,7 @@ void TokenLoader::load_from_file(const std::string& filename) {
 }
 
 const std::vector<Token>& TokenLoader::get_tokens() const {
+    // Return the loaded tokens
     return tokens;
 }
 

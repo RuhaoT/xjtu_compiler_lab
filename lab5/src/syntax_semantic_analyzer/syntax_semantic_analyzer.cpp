@@ -52,8 +52,8 @@ std::shared_ptr<ast_model::ASTNodeContent> syntax_semantic_analyzer::create_ast_
     }
     // different types of declarations
     else if (node_type == "DECL_VAR" ||
-        "DECL_FUNC" ||
-        "DECL_ARRAY") {
+        node_type == "DECL_FUNC" ||
+        node_type == "DECL_ARRAY") {
         return std::make_shared<ast_model::DeclNode>(node_type);
         }
     // type node
@@ -91,7 +91,9 @@ std::shared_ptr<ast_model::ASTNodeContent> syntax_semantic_analyzer::create_ast_
              node_type == "EXPR_FUNC" ||
              node_type == "EXPR_ARRAY" ||
              node_type == "EXPR_ARITH_NOCONST" ||
-             node_type == "EXPR_PAREN_NOCONST") {
+             node_type == "EXPR_PAREN_NOCONST" ||
+             node_type == "EXPR_MUL_TEMP" ||
+             node_type == "EXPR_ATOMIC_TEMP") {
         return std::make_shared<ast_model::ExprNode>(node_type);
     }
     // boolean nodes
@@ -114,8 +116,9 @@ std::shared_ptr<ast_model::ASTNodeContent> syntax_semantic_analyzer::create_ast_
         throw std::invalid_argument("Unknown ASTNodeType: " + node_type);
     }
     return nullptr; // This should never be reached, but added to avoid compiler warnings
-
 }
+
+
 
 SyntaxSemanticAnalyzer::SyntaxSemanticAnalyzer() {
     reset();
@@ -130,7 +133,7 @@ void SyntaxSemanticAnalyzer::reset() {
     scope_table = std::make_shared<ScopeTable>();
 }
 
-syntax_semantic_analyzer::analysis_result SyntaxSemanticAnalyzer::analyze(
+void SyntaxSemanticAnalyzer::prepair_new_analysis(
     const lr_parsing_model::LRParsingTable& slr1_parsing_table,
     const syntax_semantic_model::ProductionInfoMapping& production_info_mapping,
     const std::vector<Token>& tokens
@@ -139,16 +142,35 @@ syntax_semantic_analyzer::analysis_result SyntaxSemanticAnalyzer::analyze(
     slr1_parsing_table_ref = slr1_parsing_table; // Store the parsing table
     production_info_mapping_ref = production_info_mapping; // Store the production info mapping
     tokens_ref = tokens; // Store the token stream
-    input_check();
-    syntax_anlaysis();
-    semantic_analysis();
+    input_check(); // Check the input validity
     
+    return;
+}
+
+syntax_semantic_analyzer::analysis_result SyntaxSemanticAnalyzer::analyze_syntax_semantics(
+        const lr_parsing_model::LRParsingTable& slr1_parsing_table,
+        const syntax_semantic_model::ProductionInfoMapping& production_info_mapping,
+        const std::vector<Token>& tokens
+){
+    prepair_new_analysis(slr1_parsing_table, production_info_mapping, tokens);
+    syntax_anlaysis(); // Perform syntax analysis and build the AST tree
+    semantic_analysis(); // Perform semantic analysis on the AST tree
+
+    // Prepare the result
     syntax_semantic_analyzer::analysis_result result;
-    result.ast_tree = tree<std::shared_ptr<ast_model::ASTNodeContent>>(current_ast_subtree_stack.back());
+    result.ast_tree = current_ast_tree;
     result.symbol_table = *symbol_table;
     result.scope_table = *scope_table;
-    
+
+    spdlog::info("Syntax and semantic analysis completed successfully.");
     return result;
+}
+
+// get blank AST tree after syntax analysis
+tree<std::shared_ptr<ast_model::ASTNodeContent>> SyntaxSemanticAnalyzer::get_blank_ast_tree(){
+    syntax_anlaysis();
+
+    return current_ast_tree; // Return the blank AST tree after syntax analysis
 }
 
 void SyntaxSemanticAnalyzer::input_check() {
@@ -344,6 +366,7 @@ void SyntaxSemanticAnalyzer::syntax_anlaysis() {
             for (auto& subtree : rhs_subtrees) {
                 sub_ast_contents.push_back(subtree.head->data);
                 ast_subtree.move_in_as_nth_child(ast_subtree.begin(), children_counter, subtree);
+                children_counter++;
             };
             // now we have the complete subtree for the current production, start taking in the subnodes
             ast_node->subnode_takein(sub_ast_contents);
@@ -404,9 +427,14 @@ void SyntaxSemanticAnalyzer::recursive_iterate_ast_tree(
     // check children
     int children = current_node.number_of_children();
 
+    std::vector<std::shared_ptr<ast_model::ASTNodeContent>> subnodes;
+
     for (int i = 0; i < children; ++i) {
         // get the child node
         auto child_it = current_ast_tree.child(current_node, i);
+
+        // add the child node to the current node's subnodes
+        subnodes.push_back(child_it.node->data);
 
         if (current_node.node->data->node_type == ast_model::ASTNodeType::DECL_FUNC && child_it.node->data->node_type == ast_model::ASTNodeType::DECL_LIST) {
             // if the current node is a function declaration and the child just visited is an declaration list, it means this function is being declared, now it's time to enter a new function scope
@@ -423,6 +451,15 @@ void SyntaxSemanticAnalyzer::recursive_iterate_ast_tree(
     }
 
     // after all children are processed, perform the semantic action for the current node
+    // !!! IF THIS IS A LEAF NODE, IT MEANS THIS IS A TERMINAL NODE, AND WE SHOULD NOT CALL THE SEMANTIC ACTION
+    if (children == 0) {
+        spdlog::debug("Current node is a leaf node, skipping semantic action.");
+        return;
+    }
+    // 1. subnode takein 2. semantic action
+    // take in the subnodes for the current node
+    current_node.node->data->subnode_takein(subnodes);
+    spdlog::debug("Taking in {} subnodes for node type: {}", subnodes.size(), ast_model::ast_node_type_to_string(current_node.node->data->node_type));
     current_node.node->data->semantic_action(
         scope_table->getCurrentScope(),
         symbol_table,

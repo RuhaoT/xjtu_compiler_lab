@@ -29,12 +29,22 @@ class SyntaxSemanticAnalyzer {
 public:
     SyntaxSemanticAnalyzer(); // Constructor to initialize member variables
 
-    // Analyze the syntax and semantics of the given AST
-    syntax_semantic_analyzer::analysis_result analyze(
+    
+    void prepair_new_analysis(
         const lr_parsing_model::LRParsingTable& slr1_parsing_table,
         const syntax_semantic_model::ProductionInfoMapping& production_info_mapping,
         const std::vector<Token>& tokens
     );
+
+    // Analyze the syntax and semantics of the given AST
+    syntax_semantic_analyzer::analysis_result analyze_syntax_semantics(
+        const lr_parsing_model::LRParsingTable& slr1_parsing_table,
+        const syntax_semantic_model::ProductionInfoMapping& production_info_mapping,
+        const std::vector<Token>& tokens
+    );
+
+    // get blank AST tree after syntax analysis
+    tree<std::shared_ptr<ast_model::ASTNodeContent>> get_blank_ast_tree();
 
     // reset all member variables to their initial state
     void reset();

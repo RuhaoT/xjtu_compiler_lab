@@ -77,6 +77,27 @@ bool SLR1ConflictResolver::resolve_conflicts()
             {
                 // there is a conflict that cannot be resolved
                 spdlog::info("Conflict at state {} and symbol {} cannot be resolved because the shift symbols and follow sets intersect", state, std::string(symbol));
+                // document the shift symbols and follow sets for debugging
+                std::string shift_symbols_str = "Shift symbols: ";
+                for (const auto &shift_symbol : shift_symbols)
+                {
+                    shift_symbols_str += std::string(shift_symbol) + ", ";
+                }
+                spdlog::debug(shift_symbols_str);
+                // document follow set one by one
+                for (const auto &item : items_in_conflict)
+                {
+                    if (item->is_accepting())
+                    {
+                        std::unordered_set<cfg_model::symbol> current_item_follow_set = follow_set.follow_set.at(item->left_side_symbol);
+                        std::string follow_set_str = "Follow set for item " + std::string(item->left_side_symbol) + ": ";
+                        for (const auto &follow_symbol : current_item_follow_set)
+                        {
+                            follow_set_str += std::string(follow_symbol) + ", ";
+                        }
+                        spdlog::debug(follow_set_str);
+                    }
+                }
                 return false;
             }
             // start resolving the conflict

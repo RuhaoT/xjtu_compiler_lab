@@ -43,15 +43,73 @@ namespace lr_parsing_model
         }
     };
 
+    struct LR1Item : public Item
+    {
+        std::unordered_set<cfg_model::symbol> lookahead_symbols; // the lookahead symbol for LR(1) items
+
+        // overload the equality operator
+        bool operator==(const LR1Item &other) const
+        {
+            return Item::operator==(other) && lookahead_symbols == other.lookahead_symbols;
+        }
+
+        // string representation
+        operator std::string() const;
+
+        // helper functions
+        // create from normal Item
+        LR1Item(const Item &item, const cfg_model::symbol &lookahead)
+        {
+            left_side_symbol = item.left_side_symbol;
+            sequence_already_parsed = item.sequence_already_parsed;
+            sequence_to_parse = item.sequence_to_parse;
+            lookahead_symbols.insert(lookahead);
+        }
+        LR1Item(const Item &item, const std::unordered_set<cfg_model::symbol> &lookahead)
+        {
+            left_side_symbol = item.left_side_symbol;
+            sequence_already_parsed = item.sequence_already_parsed;
+            sequence_to_parse = item.sequence_to_parse;
+            lookahead_symbols = lookahead;
+        }
+        LR1Item() = default; // default constructor for empty LR1Item
+    };
+
 } // namespace lr_parsing_model
 
-// Specialization of std::hash for lr_parsing_model::Item
+// Specialization of std::hash for lr_parsing_model::Item & lr_parsing_model::LR1Item
 namespace std
 {
     template <>
     struct hash<lr_parsing_model::Item>
     {
-        size_t operator()(const lr_parsing_model::Item &item) const;
+        size_t operator()(const lr_parsing_model::Item &item) const
+        {
+            size_t seed = hash<cfg_model::symbol>()(item.left_side_symbol) + 0x9e3779b9;
+            for (const auto &s : item.sequence_already_parsed)
+            {
+                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+            for (const auto &s : item.sequence_to_parse)
+            {
+                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+            return seed;
+        }
+    };
+
+    template <>
+    struct hash<lr_parsing_model::LR1Item>
+    {
+        size_t operator()(const lr_parsing_model::LR1Item &item) const
+        {
+            size_t seed = hash<lr_parsing_model::Item>()(item);
+            for (const auto &s : item.lookahead_symbols)
+            {
+                seed ^= hash<cfg_model::symbol>()(s) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+            return seed;
+        }
     };
 } // namespace std
 
@@ -63,6 +121,21 @@ namespace lr_parsing_model
         std::shared_ptr<Item> start_item;
         std::shared_ptr<Item> end_item;
         std::unordered_set<cfg_model::symbol> symbol_set;
+
+        std::unordered_set<std::shared_ptr<Item>> get_generation_items(cfg_model::symbol symbol)
+        const
+        {
+            std::unordered_set<std::shared_ptr<Item>> generation_items;
+            for (const auto &item : items)
+            {
+                if (item->left_side_symbol == symbol && item->sequence_already_parsed.empty())
+                {
+                    generation_items.insert(item);
+                }
+            }
+            spdlog::debug("Generated {} items for symbol {}", generation_items.size(), std::string(symbol));
+            return generation_items;
+        }
     };
 
     struct ItemSetNFAMapping
@@ -100,6 +173,14 @@ namespace lr_parsing_model
     {
         dfa_model::DFA<std::string> dfa;
         ItemSetDFAMapping item_set_dfa_mapping;
+    };
+
+    struct LR1ItemSetDFAGenerationResult : public ItemSetDFAGenerationResult
+    {
+        // also include a new LR1ItemSet
+        lr_parsing_model::ItemSet lr1_item_set; // this is the LR(1) item set generated from the LR(0) item set
+
+        LR1ItemSetDFAGenerationResult() = default;
     };
 
     struct Action

@@ -22,6 +22,27 @@ namespace lr_parsing_model
         return result;
     }
 
+    LR1Item::operator std::string() const
+    {
+        std::string result = "[" + left_side_symbol.name + " -> ";
+        for (const auto &s : sequence_already_parsed)
+        {
+            result += std::string(s) + " ";
+        }
+        result += " · ";
+        for (const auto &s : sequence_to_parse)
+        {
+            result += " " + std::string(s);
+        }
+        result += ", ";
+        for (const auto &lookahead : lookahead_symbols)
+        {
+            result += std::string(lookahead) + " ";
+        }
+        result += "]";
+        return result;
+    }
+
     // LRParsingTable member functions
     bool LRParsingTable::add_action(const std::string &state, const cfg_model::symbol &symbol, const Action &action)
     {
@@ -105,7 +126,7 @@ namespace lr_parsing_model
             {
                 spdlog::warn("Cell is not empty for state {} and symbol {}: both action and goto table have the cell", state, std::string(symbol));
             }
-            spdlog::debug("Cell is not empty for state {} and symbol {}", state, std::string(symbol));
+            // spdlog::debug("Cell is not empty for state {} and symbol {}", state, std::string(symbol));
             return false; // cell is not empty
         }
         else

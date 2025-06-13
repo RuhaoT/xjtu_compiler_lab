@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     config_file.close();
     // generate the parsing table
     SLR1ParsingTableGenerator generator;
+    visualization_helper::generate_dfa_dot_file(generator.generate_item_set_dfa(cfg).dfa, file_name + "_dfa", true);
     // generate the parsing table with conflict resolution
     lr_parsing_model::LRParsingTable parsing_table = generator.generate_parsing_table(cfg);
     // output the parsing table

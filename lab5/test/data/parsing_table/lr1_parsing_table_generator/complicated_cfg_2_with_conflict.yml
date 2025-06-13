@@ -1,0 +1,35 @@
+# S' -> S
+# S -> L = R
+# S -> R
+# L -> * R
+# L -> id
+# R -> L
+cfg:
+  terminals:
+  - "="
+  - "*"
+  - "id"
+  non_terminals:
+  - "S"
+  - "L"
+  - "R"
+  initial_symbol: "S"
+  production_rules:
+  - lhs: "S"
+    rhs:
+    - "L"
+    - "="
+    - "R"
+  - lhs: "S"
+    rhs:
+    - "R"
+  - lhs: "L"
+    rhs:
+    - "*"
+    - "R"
+  - lhs: "L"
+    rhs:
+    - "id"
+  - lhs: "R"
+    rhs:
+    - "L"

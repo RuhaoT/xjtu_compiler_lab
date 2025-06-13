@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "simple_lr_parsing_table_generator.h"
+#include "visualization_helper.h"
 #include "testing_utils.h"
 #include "yaml_cfg_loader.h"
 #include "spdlog/spdlog.h"
@@ -50,6 +51,8 @@ TEST_F(SimpleLRParsingTableGeneratorTests, TestGenerateParsingTable)
 
     // Generate the parsing table
     lr_parsing_model::LRParsingTable parsing_table = generator.generate_parsing_table(cfg);
+    // visualize the dfa
+    visualization_helper::generate_dfa_dot_file(generator.generate_item_set_dfa(cfg).dfa, "minimal_correct_cfg_dfa_simple_lr", true);
     // Check the parsing table
     ASSERT_TRUE(parsing_table.filling_check()) << "Parsing table filling check failed";
 }

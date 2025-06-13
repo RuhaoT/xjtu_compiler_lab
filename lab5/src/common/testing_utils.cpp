@@ -54,6 +54,17 @@ void release_fixture_logger() {
     logger.reset();
 }
 
+std::shared_ptr<spdlog::logger> get_fixture_logger() {
+    // get the logger
+    auto logger = spdlog::get(GTEST_LOGGER_NAME);
+    if (!logger) {
+        std::string error_message = "Logger with name '" + std::string(GTEST_LOGGER_NAME) + "' does not exist. Please initialize the logger before using it.";
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+    return logger;
+}
+
 void add_test_start_log(const std::string &test_name) {
     // log the test name
     LoggingEnvironment::logger->info("--------------------------------------------------");

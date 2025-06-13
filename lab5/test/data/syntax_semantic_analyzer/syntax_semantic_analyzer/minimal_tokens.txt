@@ -1,0 +1,6 @@
+(INT, -)
+(ID, b)
+(SCO, -)
+(ID, b)
+(ASG, -)
+(NUM, 2)

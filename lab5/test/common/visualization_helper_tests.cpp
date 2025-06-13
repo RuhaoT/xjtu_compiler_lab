@@ -64,7 +64,7 @@ TEST_F(VisualizationHelperTests, TestPrettyPrintComplicatedParsingTable)
     lr_parsing_model::LRParsingTable parsing_table = generator.generate_parsing_table(cfg);
     ASSERT_NO_THROW(parsing_table.filling_check()) << "Parsing table filling check failed";
     // Pretty print the parsing table
-    ASSERT_NO_THROW(visualization_helper::pretty_print_parsing_table(parsing_table)) << "pretty_print_parsing_table threw an exception";
+    ASSERT_NO_THROW(visualization_helper::pretty_print_parsing_table(parsing_table, true, "viz_complicated_parsing_table_with_conflict.md")) << "pretty_print_parsing_table threw an exception";
 }
 
 // Test case for generating NFA dot file
@@ -143,5 +143,5 @@ TEST_F(VisualizationHelperTests, TestPrettyPrintResolvedParsingTable)
     lr_parsing_model::LRParsingTable parsing_table = generator.generate_parsing_table(cfg);
     ASSERT_NO_THROW(parsing_table.filling_check()) << "Parsing table filling check failed";
     // Pretty print the parsing table
-    ASSERT_NO_THROW(visualization_helper::pretty_print_parsing_table(parsing_table)) << "pretty_print_parsing_table threw an exception";
+    ASSERT_NO_THROW(visualization_helper::pretty_print_parsing_table(parsing_table, true, "viz_resolved_parsing_table.md")) << "pretty_print_parsing_table threw an exception";
 }

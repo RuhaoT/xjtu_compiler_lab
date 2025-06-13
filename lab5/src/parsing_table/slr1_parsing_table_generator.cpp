@@ -74,3 +74,37 @@ lr_parsing_model::LRParsingTable SLR1ParsingTableGenerator::generate_parsing_tab
         throw std::runtime_error(error_msg);
     }
 }
+
+// generate nfa/dfa for the item set, the same as the LR(0) parsing table generator
+lr_parsing_model::ItemSetNFAGenerationResult SLR1ParsingTableGenerator::generate_item_set_nfa(const cfg_model::CFG &cfg)
+{
+    try
+    {
+        // Generate the item set
+        lr_parsing_model::ItemSet item_set = generate_item_set(cfg);
+        ItemSetToParsingTable item_set_to_parsing_table(item_set);
+        return item_set_to_parsing_table.get_nfa();
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_msg = "Error generating NFA from item set: " + std::string(e.what());
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
+    }
+}
+lr_parsing_model::ItemSetDFAGenerationResult SLR1ParsingTableGenerator::generate_item_set_dfa(const cfg_model::CFG &cfg)
+{
+    try
+    {
+        // Generate the item set
+        lr_parsing_model::ItemSet item_set = generate_item_set(cfg);
+        ItemSetToParsingTable item_set_to_parsing_table(item_set);
+        return item_set_to_parsing_table.get_dfa();
+    }
+    catch (const std::exception &e)
+    {
+        std::string error_msg = "Error generating DFA from item set: " + std::string(e.what());
+        spdlog::error(error_msg);
+        throw std::runtime_error(error_msg);
+    }
+}

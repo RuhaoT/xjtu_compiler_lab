@@ -74,6 +74,7 @@ add_library(parsing_table_utils STATIC
     src/parsing_table/lr_parsing_model.cpp
     src/parsing_table/slr1_conflict_resolver.cpp
     src/parsing_table/slr1_parsing_table_generator.cpp
+    src/parsing_table/lr1_parsing_table_generator.cpp
 )
 # Headers for this library are in include/parsing_table/
 # this library requires fsm_utils and cfg_utils
@@ -96,7 +97,6 @@ target_link_libraries(syntax_semantic_analyzer_utils PUBLIC
     cfg_utils
     parsing_table_utils
     lexer_utils
-    spdlog::spdlog
     yaml-cpp
 )
 
@@ -109,6 +109,7 @@ target_link_libraries(viz_utils PUBLIC
     cfg_utils
     fsm_utils
     parsing_table_utils
+    syntax_semantic_analyzer_utils
 )
 target_link_libraries(viz_utils PUBLIC
     Boost::graph
@@ -155,6 +156,7 @@ add_executable(test_all
     test/parsing_table/itemset_to_parsing_table_tests.cpp
     test/parsing_table/simple_lr_parsing_table_generator_tests.cpp
     test/parsing_table/slr1_parsing_table_generator_tests.cpp
+    test/parsing_table/lr1_parsing_table_generator_tests.cpp
     test/common/visualization_helper_tests.cpp
     test/lexer/yaml_lexer_factory_tests.cpp
     test/lexer/dfa_based_lexer_tests.cpp
@@ -164,6 +166,7 @@ add_executable(test_all
     test/syntax_semantic_analyzer/semantic_loader_tests.cpp
     test/syntax_semantic_analyzer/scope_table_tests.cpp
     test/syntax_semantic_analyzer/symbol_table_tests.cpp
+    test/syntax_semantic_analyzer/syntax_semantic_analyzer_tests.cpp
 )
 
 target_link_libraries(test_all PRIVATE

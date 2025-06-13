@@ -1,6 +1,7 @@
 #include "visualization_helper.h"
 #include "spdlog/spdlog.h"
 #include "tabulate/table.hpp"
+#include "tabulate/markdown_exporter.hpp"
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/graphviz.hpp"
 #include "boost/graph/graph_utility.hpp"
@@ -16,8 +17,9 @@
 #include "syntax_semantic_analyzer/symbol_table.h" // Ensure this path is correct
 #include "syntax_semantic_analyzer/ast_model.h"   // Ensure this path is correct
 #include "syntax_semantic_analyzer/syntax_semantic_model.h" // Ensure this path is correct
+#include "tree/tree.hh"
 
-void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LRParsingTable &parsing_table)
+void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LRParsingTable &parsing_table, bool export_to_file, const std::string &filename)
 {
     try{
     // Create a table using the tabulate library
@@ -199,6 +201,8 @@ void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LR
     }
     spdlog::debug("Production index table visualization completed with {} rows", production_index_map.size());
 
+    if (!export_to_file)
+    {
     // print the tables
     std::cout << "Parsing Table:" << std::endl;
     std::cout << table_parsing << std::endl;
@@ -209,6 +213,30 @@ void visualization_helper::pretty_print_parsing_table(const lr_parsing_model::LR
 
     // print the start state
     std::cout << "Start State: " << parsing_table.start_state << std::endl;
+    }
+    else
+    {
+        tabulate::MarkdownExporter markdown_exporter;
+        // Export the tables to markdown format
+        auto table_parsing_markdown = markdown_exporter.dump(table_parsing);
+        auto table_state_index_markdown = markdown_exporter.dump(table_state_index);
+        auto table_production_index_markdown = markdown_exporter.dump(table_production_index);
+        // Write the markdown to files
+        // if already exists, overwrite it
+        std::ofstream parsing_table_file(filename);
+        if (!parsing_table_file.is_open())
+        {
+            spdlog::error("Failed to open file for writing: {}", filename);
+            throw std::runtime_error("Failed to open file: " + filename);
+        }
+        parsing_table_file << "# Parsing Table\n" << table_parsing_markdown << "\n\n";
+        parsing_table_file << "# State Index Table\n" << table_state_index_markdown << "\n\n";
+        parsing_table_file << "# Production Index Table\n" << table_production_index_markdown << "\n\n";
+        parsing_table_file << "Start State: " << parsing_table.start_state << "\n";
+        parsing_table_file.close();
+        spdlog::info("Parsing table visualization exported to file: {}", filename);
+    }
+
 }
     catch (const std::exception &e)
     {
@@ -501,14 +529,12 @@ void visualization_helper::generate_dfa_dot_file(const dfa_model::DFA<std::strin
     }
 };
 
-void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_table_manager) {
+void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_table_manager, bool export_to_file, const std::string &filename) {
     try {
         tabulate::Table symbol_table_viz;
         symbol_table_viz.add_row({"Symbol Name", "Data Type", "Kind", "Scope ID", "Memory Size (bytes)", "Other Attributes"});
 
-        // set
         for (const syntax_semantic_model::SymbolEntry &entry : symbol_table_manager.symbols) {
-            
             tabulate::Table::Row_t row_data;
             row_data.push_back(entry.symbol_name);
             row_data.push_back(entry.data_type);
@@ -519,22 +545,21 @@ void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_t
             switch (entry.symbol_type) {
                 case syntax_semantic_model::SymbolType::Variable:
                     kind_str = "Variable";
-                    // 普通变量通常没有额外的 "Other Attributes" 在此级别显示
                     break;
                 case syntax_semantic_model::SymbolType::Function:
                     kind_str = "Function";
                     other_attrs_ss << "Args: [";
                     if (entry.arg_list.has_value()) {
                         for (size_t i = 0; i < entry.arg_list->size(); ++i) {
-                            other_attrs_ss << entry.arg_list.value()[i]; // arg_list 存储参数名
+                            other_attrs_ss << entry.arg_list.value()[i];
                             if (i < entry.arg_list->size() - 1) other_attrs_ss << ", ";
                         }
                     }
                     other_attrs_ss << "]";
                     if (entry.direct_child_scope.has_value()) {
-                         other_attrs_ss << ", BodyScopeID: " << entry.direct_child_scope.value();
+                        other_attrs_ss << ", BodyScopeID: " << entry.direct_child_scope.value();
                     } else {
-                         other_attrs_ss << ", BodyScopeID: N/A";
+                        other_attrs_ss << ", BodyScopeID: N/A";
                     }
                     break;
                 case syntax_semantic_model::SymbolType::Array:
@@ -545,7 +570,6 @@ void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_t
                         other_attrs_ss << "Length: N/A";
                     }
                     break;
-                // Add other cases for other symbol types if they exist
                 default:
                     kind_str = "Unknown";
                     break;
@@ -555,18 +579,125 @@ void visualization_helper::pretty_print_symbol_table(const SymbolTable &symbol_t
             row_data.push_back(std::to_string(entry.scope_id));
             row_data.push_back(std::to_string(entry.memory_size));
             row_data.push_back(other_attrs_ss.str());
-            
+
             symbol_table_viz.add_row(row_data);
         }
 
-        std::cout << "\\nSymbol Table:" << std::endl;
-        std::cout << symbol_table_viz << std::endl;
-        spdlog::debug("Symbol table visualization completed.");
-
+        if (!export_to_file) {
+            std::cout << "\nSymbol Table:" << std::endl;
+            std::cout << symbol_table_viz << std::endl;
+            spdlog::debug("Symbol table visualization completed.");
+        } else {
+            tabulate::MarkdownExporter markdown_exporter;
+            auto table_markdown = markdown_exporter.dump(symbol_table_viz);
+            std::ofstream out_file(filename);
+            if (!out_file.is_open()) {
+                spdlog::error("Failed to open file for writing: {}", filename);
+                throw std::runtime_error("Failed to open file: " + filename);
+            }
+            out_file << "# Symbol Table\n" << table_markdown << "\n";
+            out_file.close();
+            spdlog::info("Symbol table exported to file: {}", filename);
+        }
     } catch (const std::exception &e) {
         std::string error_message = "Error visualizing symbol table: ";
         error_message += e.what();
         spdlog::error(error_message);
-        // 可以选择不抛出异常，仅记录错误
     }
 }
+
+void visualization_helper::generate_ast_tree_dot_file(
+    const tree<std::shared_ptr<ast_model::ASTNodeContent>> &ast_tree,
+    const std::string &filename,
+    bool generate_svg
+) {
+    try {
+        std::ofstream dot_file(filename);
+        if (!dot_file.is_open()) {
+            spdlog::error("Failed to open .dot file for writing: {}", filename);
+            throw std::runtime_error("Failed to open .dot file: " + filename);
+        }
+
+        // 定义 graph 类型
+        using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS>;
+        Graph g;
+
+        // 记录每个 AST 节点在 graph 中的 vertex_descriptor
+        std::unordered_map<std::shared_ptr<ast_model::ASTNodeContent>, Graph::vertex_descriptor> node_to_vertex;
+        // 记录每个 vertex 的 label 和 node_id
+        std::unordered_map<Graph::vertex_descriptor, std::string> vertex_labels;
+        std::unordered_map<Graph::vertex_descriptor, std::string> vertex_ids;
+
+        int vid = 0;
+        for (auto it = ast_tree.begin_breadth_first(); it != ast_tree.end_breadth_first(); ++it) {
+            spdlog::debug("Processing AST node: {}", it.node->data ? ast_model::ast_node_type_to_string(it.node->data->node_type) : "(null)");
+            auto v = boost::add_vertex(g);
+            node_to_vertex[it.node->data] = v;
+            
+            // label
+            if (it.node->data) { // it.node->data is std::shared_ptr<ast_model::ASTNodeContent>
+                // 假设 ast_model::ASTNodeContent 有一个 virtual std::string to_string() const; 方法
+                vertex_labels[v] = it.node->data->to_string();
+            } else {
+                vertex_labels[v] = "(null)";
+            }
+            
+            // node_id 必须唯一且为字符串
+            vertex_ids[v] = "n" + std::to_string(vid++);
+            spdlog::debug("Adding vertex: {} with label: {}", vertex_ids[v], vertex_labels[v]);
+        }
+
+        // 2. 添加所有边
+        for (auto it = ast_tree.begin_breadth_first(); it != ast_tree.end_breadth_first(); ++it) {
+            if (!it.node->data) continue; // Skip if data is null
+            auto parent_v_it = node_to_vertex.find(it.node->data);
+            if (parent_v_it == node_to_vertex.end()) {
+                spdlog::warn("Parent node not found in vertex map during edge creation.");
+                continue;
+            }
+            auto parent_v = parent_v_it->second;
+            
+            int children_count = it.number_of_children();
+            for (int i = 0; i < children_count; ++i) {
+                auto child_it = ast_tree.child(it, i);
+                if (!child_it.node->data) continue; // Skip if child data is null
+
+                auto child_v_it = node_to_vertex.find(child_it.node->data);
+                if (child_v_it == node_to_vertex.end()) {
+                     spdlog::warn("Child node not found in vertex map during edge creation.");
+                     continue;
+                }
+                auto child_v = child_v_it->second;
+                boost::add_edge(parent_v, child_v, g);
+            }
+        }
+
+        // 3. 绑定 label 和 node_id 属性
+        boost::dynamic_properties dp;
+        dp.property("label", boost::make_assoc_property_map(vertex_labels));
+        dp.property("node_id", boost::make_assoc_property_map(vertex_ids));
+
+        // 4. 写入 dot 文件
+        boost::write_graphviz_dp(dot_file, g, dp);
+        dot_file.close();
+        spdlog::info("AST tree written to {}", filename);
+
+        // 5. 可选生成 svg
+        if (generate_svg) {
+            std::string command = "dot -Tsvg \"" + filename + "\" -o \"" + filename + ".svg\"";
+            spdlog::info("Attempting to generate SVG: {}", command);
+            int result = std::system(command.c_str());
+            if (result == 0) {
+                spdlog::info("SVG file generated: {}.svg", filename);
+            } else {
+                spdlog::error("Failed to generate SVG with command: '{}'. 'dot' utility might not be installed or not in PATH. Error code: {}", command, result);
+            }
+        }
+    }
+    catch (const std::exception &e) {
+        std::string error_message = "Error generating AST tree .dot file: ";
+        error_message += e.what();
+        spdlog::error(error_message);
+        throw std::runtime_error(error_message);
+    }
+    }
