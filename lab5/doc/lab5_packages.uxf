@@ -15,8 +15,10 @@ halign=left</panel_attributes><additional_attributes></additional_attributes></e
 Parsing Model
 ItemSet Generator
 ItemSet to ParsingTable Converter
+LR0 ParsingTable Generator
 SLR1 Conflict Resolver
-CFG ParsingTable Generator
+SLR1 ParsingTable Generator
+LR1 ParsingTable Generator
 halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLPackage</id><coordinates><x>168</x><y>595</y><w>224</w><h>112</h></coordinates><panel_attributes>Common
 --
 Visualization Helpler
@@ -38,8 +40,9 @@ halign=left</panel_attributes><additional_attributes></additional_attributes></e
 --
 Syntax Semantic Model
 Semantic Loader
-Syntax Analyzer
-Semanic Analyzer
+Symbol Table
+Scope Table
+Syntax Semanic Analyzer
 halign=left</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>56</x><y>357</y><w>385</w><h>154</h></coordinates><panel_attributes>lt=.&gt;
 &lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>530;200;10;200;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>161</x><y>196</y><w>280</w><h>301</h></coordinates><panel_attributes>lt=.&gt;
 &lt;&lt;import&gt;&gt;</panel_attributes><additional_attributes>380;410;120;410;120;60;10;60;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>574</x><y>364</y><w>56</w><h>98</h></coordinates><panel_attributes>lt=.&gt;

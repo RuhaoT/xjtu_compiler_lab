@@ -12,6 +12,8 @@ std::shared_ptr<spdlog::logger> init_fixture_logger(const std::string &log_filen
 
 void release_fixture_logger();
 
+void set_fixture_logger_level(spdlog::level::level_enum level);
+
 void add_test_start_log(const std::string &test_name);
 void add_test_end_log(const std::string &test_name);
 

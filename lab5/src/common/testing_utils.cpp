@@ -65,18 +65,29 @@ std::shared_ptr<spdlog::logger> get_fixture_logger() {
     return logger;
 }
 
+void set_fixture_logger_level(spdlog::level::level_enum level) {
+    // get the logger
+    auto logger = get_fixture_logger();
+    // set the log level
+    logger->set_level(level);
+}
+
 void add_test_start_log(const std::string &test_name) {
+    // get the logger
+    auto logger = get_fixture_logger();
     // log the test name
-    LoggingEnvironment::logger->info("--------------------------------------------------");
-    LoggingEnvironment::logger->info("Running test: {}", test_name);
-    LoggingEnvironment::logger->info("--------------------------------------------------");
+    logger->info("--------------------------------------------------");
+    logger->info("Running test: {}", test_name);
+    logger->info("--------------------------------------------------");
 }
 
 void add_test_end_log(const std::string &test_name) {
+    // get the logger
+    auto logger = get_fixture_logger();
     // log the test name
-    LoggingEnvironment::logger->info("--------------------------------------------------");
-    LoggingEnvironment::logger->info("Finished test: {}", test_name);
-    LoggingEnvironment::logger->info("--------------------------------------------------");
+    logger->info("--------------------------------------------------");
+    logger->info("Finished test: {}", test_name);
+    logger->info("--------------------------------------------------");
 }
 
 cfg_model::CFG load_test_cfg(const std::string &cfg_file_path)
