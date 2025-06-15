@@ -119,6 +119,10 @@ namespace interm_code_model
 
     std::string LogicalAddress::toString() const
     {
+        if (memSpaceType == LogicalMemSpaceType::STACK)
+        {
+            return "STACK_TOP";
+        }
         return logicalMemSpaceTypeToString(memSpaceType) + "[" + std::to_string(offset) + "]";
     }
 

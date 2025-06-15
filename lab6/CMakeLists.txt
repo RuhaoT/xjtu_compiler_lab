@@ -208,21 +208,7 @@ include(GoogleTest)
 gtest_discover_tests(test_all)
 
 # --- Main Frontend Executable ---
-add_executable(frontend
-    frontend.cpp
-    # frontend.cpp links against component libraries
-)
-
-target_link_libraries(frontend PRIVATE
-    cfg_utils
-    fsm_utils
-    parsing_table_utils
-    lexer_utils
-    syntax_semantic_analyzer_utils
-    viz_utils
-    spdlog::spdlog
-    # yaml-cpp, Boost::graph, tabulate::tabulate are linked via component libs
-)
+# 没空搞了
 
 # Optional: Set C++ standard if not already set elsewhere
 # set(CMAKE_CXX_STANDARD 17)

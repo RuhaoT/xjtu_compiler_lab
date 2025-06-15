@@ -645,7 +645,14 @@ void ast_model::StatNode::generate_intermediate_code(
             // increment the argument index
             arg_index++;
         }
-        // 2. get a new temp label for return address, assign to RA register
+        // 2. save the current state
+        auto save_state_code = simulator.save_scope_state(scope_id);
+        this->interm_code_list->insert(
+            this->interm_code_list->end(),
+            save_state_code.begin(),
+            save_state_code.end());
+        spdlog::debug("Saved current scope state for function call.");
+        // 3. get a new temp label for return address, assign to RA register
         std::string return_label = simulator.get_new_temp_label(scope_id);
         interm_code_model::Register ra_reg(interm_code_model::RegisterType::TYPE_RA, 0);
         auto assign_ra_code = std::make_shared<interm_code_model::IntermediateCode>(
@@ -654,13 +661,6 @@ void ast_model::StatNode::generate_intermediate_code(
             interm_code_model::Operand(return_label, interm_code_model::OperandType::LABEL));
         this->interm_code_list->push_back(assign_ra_code);
         spdlog::debug("Assigned return address label {} to RA register {}", return_label, ra_reg.toString());
-        // 3. save the current state
-        auto save_state_code = simulator.save_scope_state(scope_id);
-        this->interm_code_list->insert(
-            this->interm_code_list->end(),
-            save_state_code.begin(),
-            save_state_code.end());
-        spdlog::debug("Saved current scope state for function call.");
         // 4. generate a goto code to the function label
         // get the function label from simulator
         std::string func_label = simulator.get_func_label(id_node->value);
@@ -873,7 +873,14 @@ void ast_model::ExprNode::generate_intermediate_code(
             // increment the argument index
             arg_index++;
         }
-        // 2. get a new temp label for return address, assign to RA register
+        // 2. save the current state
+        auto save_state_code = simulator.save_scope_state(scope_id);
+        this->interm_code_list->insert(
+            this->interm_code_list->end(),
+            save_state_code.begin(),
+            save_state_code.end());
+        spdlog::debug("Saved current scope state for function call.");
+        // 3. get a new temp label for return address, assign to RA register
         std::string return_label = simulator.get_new_temp_label(scope_id);
         interm_code_model::Register ra_reg(interm_code_model::RegisterType::TYPE_RA, 0);
         auto assign_ra_code = std::make_shared<interm_code_model::IntermediateCode>(
@@ -882,13 +889,6 @@ void ast_model::ExprNode::generate_intermediate_code(
             interm_code_model::Operand(return_label, interm_code_model::OperandType::LABEL));
         this->interm_code_list->push_back(assign_ra_code);
         spdlog::debug("Assigned return address label {} to RA register {}", return_label, ra_reg.toString());
-        // 3. save the current state
-        auto save_state_code = simulator.save_scope_state(scope_id);
-        this->interm_code_list->insert(
-            this->interm_code_list->end(),
-            save_state_code.begin(),
-            save_state_code.end());
-        spdlog::debug("Saved current scope state for function call.");
         // 4. generate a goto code to the function label
         // get the function label from simulator
         std::string func_label = simulator.get_func_label(id_node->value);
