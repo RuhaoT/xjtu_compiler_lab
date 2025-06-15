@@ -23,6 +23,7 @@ namespace interm_code_model
     {
         TYPE_T_GENERAL,
         TYPE_R_GENERAL,
+        TYPE_RA // special register for function return address
     };
 
     RegisterType stringToRegisterType(const std::string &type);
@@ -79,6 +80,7 @@ namespace interm_code_model
         RegisterType type;
         int id;
 
+        Register() = default;
         Register(RegisterType type, int id) : type(type), id(id) {}
         std::string toString() const;
 
@@ -94,19 +96,25 @@ namespace interm_code_model
 
         Operand(Register reg) : type(OperandType::REGISTER), reg(reg) {}
         Operand(LogicalAddress logicalAddress) : type(OperandType::LOGICAL_ADDRESS), logicalAddress(logicalAddress) {}
-        Operand(std::string string_value, OperandType type) {
-            if (type == OperandType::CONSTANT) {
+        Operand(std::string string_value, OperandType type)
+        {
+            if (type == OperandType::CONSTANT)
+            {
                 this->type = OperandType::CONSTANT;
                 constant = string_value;
-            } else if (type == OperandType::LABEL) {
+            }
+            else if (type == OperandType::LABEL)
+            {
                 this->type = OperandType::LABEL;
                 label = string_value;
-            } else {
+            }
+            else
+            {
                 throw std::invalid_argument("Invalid OperandType for string value");
             }
         }
         std::string toString() const;
-        
+
         bool operator==(const Operand &other) const;
     };
 

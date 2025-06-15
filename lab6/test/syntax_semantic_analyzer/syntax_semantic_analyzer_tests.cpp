@@ -107,6 +107,73 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalSemanticIncorrectMissMa
     }
 }
 
+// test a minimal correst case
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalCorrect)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "minimal_correct_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    auto ast_tree = analyzer.get_blank_ast_tree();
+
+    // Check if the AST tree is not empty
+    ASSERT_FALSE(ast_tree.empty());
+
+    // generate AST tree dot file
+    visualization_helper::generate_ast_tree_dot_file(ast_tree, "integration_minimal_correct_ast_tree_blank", true);
+
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+    // save the AST tree to a file
+    visualization_helper::generate_ast_tree_dot_file(result.ast_tree, "integration_minimal_correct_ast_tree_result", true);
+}
+
+// test minima_multifunc_correct case
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalMultiFuncCorrect)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "minimal_multifunc_correct_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    auto ast_tree = analyzer.get_blank_ast_tree();
+
+    // Check if the AST tree is
+    ASSERT_FALSE(ast_tree.empty());
+    // generate AST tree dot file
+    visualization_helper::generate_ast_tree_dot_file(ast_tree, "integration_minimal_multifunc_correct_ast_tree_blank", true);
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+    // save the AST tree to a file
+    visualization_helper::generate_ast_tree_dot_file(result.ast_tree, "integration_minimal_multifunc_correct_ast_tree_result", true);
+    // save the symbol table to a file
+    visualization_helper::pretty_print_symbol_table(result.symbol_table, true, "integration_minimal_multifunc_correct_symbol_table.md");
+}
+
 // integration test for syntax semantic analyzer, testing a simple correct case
 TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestSimpleCorrect)
 {

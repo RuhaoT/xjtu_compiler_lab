@@ -12,6 +12,8 @@ namespace interm_code_model
             return RegisterType::TYPE_T_GENERAL;
         if (type == "R")
             return RegisterType::TYPE_R_GENERAL;
+        if (type == "RA")
+            return RegisterType::TYPE_RA; // special register for function return address
         throw std::invalid_argument("Unknown RegisterType string: " + type);
     }
 
@@ -23,6 +25,8 @@ namespace interm_code_model
             return "T";
         case RegisterType::TYPE_R_GENERAL:
             return "R";
+        case RegisterType::TYPE_RA:
+            return "RA"; // special register for function return address
         default:
             throw std::invalid_argument("Unknown RegisterType enum value");
         }

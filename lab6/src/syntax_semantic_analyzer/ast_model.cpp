@@ -483,8 +483,12 @@ void ast_model::DeclNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
     }
     else if (this->node_type == ASTNodeType::DECL_FUNC)
     {
-        // 8. if is function declaration, check if arg_list is set
-        if (!this->arg_list.has_value())
+        // 8. if is function declaration, get arg list from subnodes
+        // dymanic cast subnode 3 to ArgListNode
+        auto arg_list_node = std::dynamic_pointer_cast<ArgListNode>(subnodes[3]);
+        // get arg_list from arg_list_node
+        this->arg_list = arg_list_node; // Store the argument list in the declaration node
+        if (!this->arg_list.value()->arg_count)
         {
             spdlog::warn("Function '{}' has no arguments.", this->var_name);
         }
@@ -501,7 +505,7 @@ void ast_model::DeclNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
         int direct_child_scope = decl_list_node->scope_id;
         symbol_entry.direct_child_scope = direct_child_scope; // Set direct child scope for function
         spdlog::info("Adding function '{}' of type '{}' with arguments to symbol table in scope {}.", this->var_name, this->data_type, scope_id);
-        if (this->arg_list.has_value())
+        if (this->arg_list.has_value() && this->arg_list.value()->arg_count > 0)
         {
             for (const auto &arg : this->arg_list.value()->arg_info)
             {
@@ -511,7 +515,7 @@ void ast_model::DeclNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
                 arg_entry.symbol_type = syntax_semantic_model::SymbolType::Variable;                     // Arguments are treated as variables
                 arg_entry.scope_id = direct_child_scope;                                                 // Arguments are in the same scope as the function
                 arg_entry.memory_size = (arg->data_type == "INT") ? INT_MEMORY_SIZE : FLOAT_MEMORY_SIZE; // Set memory size based on data type
-                symbol_entry.arg_list->push_back(arg_entry.symbol_name);                                 // Add argument name to function's argument list
+                symbol_entry.arg_list.value().push_back(arg_entry.symbol_name);                                 // Add argument name to function's argument list
                 spdlog::debug("Adding argument '{}' of type '{}' to function '{}'.", arg->var_name, arg->data_type, this->var_name);
                 // check if the argument already exists in the current scope
                 if (symbol_table->symbolExists(arg_entry.symbol_name, direct_child_scope))
@@ -525,10 +529,12 @@ void ast_model::DeclNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
         }
         else {
             // !!! INIT an empty argument list if no arguments are provided
-            symbol_entry.arg_list = std::vector<std::string>();
+            std::vector<std::string> empty_arg_list = {};
+            symbol_entry.arg_list = empty_arg_list; // Initialize an empty argument list
+            assert(symbol_entry.arg_list.has_value() && symbol_entry.arg_list.value().empty());
         }
         symbol_table->addSymbol(symbol_entry);
-        spdlog::info("Added function '{}' of type '{}' with arguments to symbol table in scope {}.", this->var_name, this->data_type, scope_id);
+        spdlog::info("Added function '{}' of type '{}' with {} arguments to symbol table in scope {}.", this->var_name, this->data_type, symbol_entry.arg_list.value().size(),  scope_id);
     }
 };
 
@@ -670,8 +676,8 @@ void ast_model::StatNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
             spdlog::error("Return statement must return a value.");
             throw std::runtime_error("Return statement must return a value.");
         }
-        // 2. dymanic cast subnode 0 to ExprNode
-        auto expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[0]);
+        // 2. dymanic cast subnode 1 to ExprNode
+        auto expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[1]);
         // 3. check if the return type matches the function's return type
         // find the direct parent scope of the current scope from scope_table
         auto parent_scope = scope_table->getDirectParentScope(scope_id);
@@ -706,19 +712,21 @@ void ast_model::StatNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
         // 1. dymanic cast subnode 0 to IDNode and get function_name
         auto id_node = std::dynamic_pointer_cast<TerminalNode>(subnodes[0]);
         std::string function_name = id_node->value;
-        // 2. check if the function exists in the current scope
-        if (!symbol_table->symbolExists(function_name, scope_id))
+        spdlog::debug("Function call to '{}'", function_name);
+        // 2. check if the function exists in the current scope or any parent scope
+        if (!symbol_table->symbolExists(function_name, scope_id) && !symbol_table->findSymbolInAllScopes(function_name).has_value())
         {
-            spdlog::error("Function '{}' does not exist in scope {}.", function_name, scope_id);
+            spdlog::error("Function '{}' does not exist in scope {} or any parent scope.", function_name, scope_id);
             throw std::runtime_error("Function does not exist in current scope.");
         }
         // 3. check if the function is called with the correct number of arguments
-        auto symbol_entry = symbol_table->findSymbolInScope(function_name, scope_id);
+        auto symbol_entry = symbol_table->findSymbolInAllScopes(function_name);
         auto rarg_list_subnode = std::dynamic_pointer_cast<RealArgListNode>(subnodes[2]);
-        if (rarg_list_subnode->arg_count != symbol_entry->arg_list->size())
+        if ((!symbol_entry->arg_list.value().empty() || rarg_list_subnode->arg_count > 0) && rarg_list_subnode->arg_count != int(symbol_entry->arg_list.value().size()))
         {
-            spdlog::error("Function '{}' expects {} arguments, but got {}.", function_name, symbol_entry->arg_list->size(), rarg_list_subnode->arg_count);
-            throw std::runtime_error("Function call argument count mismatch.");
+            std::string err_string = "Function '" + function_name + "' expects " + std::to_string(symbol_entry->arg_list.value().size()) + " arguments, but got " + std::to_string(rarg_list_subnode->arg_count) + ".";
+            spdlog::error(err_string);
+            throw std::runtime_error("Function call argument count mismatch: " + err_string);
         }
         // 4. check if the argument types match
         for (size_t i = 0; i < rarg_list_subnode->arg_count; ++i)
@@ -819,19 +827,20 @@ void ast_model::ExprNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
         // 1. dymanic cast subnode 0 to IDNode and get function_name
         auto id_node = std::dynamic_pointer_cast<TerminalNode>(subnodes[0]);
         std::string function_name = id_node->value;
-        // 2. check if the function exists in the current scope
-        if (!symbol_table->symbolExists(function_name, scope_id))
+        // 2. check if the function exists in the current scope or any parent scope
+        if (!symbol_table->symbolExists(function_name, scope_id) && !symbol_table->findSymbolInAllScopes(function_name).has_value())
         {
-            spdlog::error("Function '{}' does not exist in scope {}.", function_name, scope_id);
+            spdlog::error("Function '{}' does not exist in scope {} or any parent scope.", function_name, scope_id);
             throw std::runtime_error("Function does not exist in current scope.");
         }
         // 3. check if the function is called with the correct number of arguments
-        auto symbol_entry = symbol_table->findSymbolInScope(function_name, scope_id);
+        auto symbol_entry = symbol_table->findSymbolInAllScopes(function_name);
         auto rarg_list_subnode = std::dynamic_pointer_cast<RealArgListNode>(subnodes[2]);
-        if (rarg_list_subnode->arg_count != symbol_entry->arg_list->size())
+        if ((!symbol_entry->arg_list.value().empty() || rarg_list_subnode->arg_count > 0) && rarg_list_subnode->arg_count != int(symbol_entry->arg_list.value().size()))
         {
-            spdlog::error("Function '{}' expects {} arguments, but got {}.", function_name, symbol_entry->arg_list->size(), rarg_list_subnode->arg_count);
-            throw std::runtime_error("Function call argument count mismatch.");
+            std::string err_string = "Function '" + function_name + "' expects " + std::to_string(symbol_entry->arg_list.value().size()) + " arguments, but got " + std::to_string(rarg_list_subnode->arg_count) + ".";
+            spdlog::error(err_string);
+            throw std::runtime_error("Function call argument count mismatch: " + err_string);
         }
         // 4. check if the argument types match
         for (size_t i = 0; i < rarg_list_subnode->arg_count; ++i)
@@ -1059,10 +1068,10 @@ void ast_model::RealArgNode::semantic_action(int scope_id, std::shared_ptr<Symbo
         // 5. dymanic cast subnode 0 to IDNode and get function_name
         auto id_node = std::dynamic_pointer_cast<TerminalNode>(subnodes[0]);
         std::string function_name = id_node->value;
-        // 6. check if the function exists in the current scope
-        if (!symbol_table->symbolExists(function_name, scope_id))
+        // 6. check if the function exists in the current scope or any parent scope
+        if (!symbol_table->symbolExists(function_name, scope_id) && !symbol_table->findSymbolInAllScopes(function_name).has_value())
         {
-            spdlog::error("Function '{}' does not exist in scope {}.", function_name, scope_id);
+            spdlog::error("Function '{}' does not exist in scope {} or any parent scope.", function_name, scope_id);
             throw std::runtime_error("Function does not exist in current scope.");
         }
         // 7. get the function's return type from the symbol table

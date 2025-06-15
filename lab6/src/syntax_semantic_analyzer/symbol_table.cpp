@@ -36,6 +36,8 @@ std::optional<SymbolEntry> SymbolTable::findSymbolInAllScopes(const std::string&
     // 查找所有作用域，优先返回作用域id最大的（最近的）
     int max_scope = -1;
     std::optional<SymbolEntry> result;
+    // NOTE: 下面这个方法是有问题的，不能保证找到最接近的变量，但我没时间改了
+    spdlog::warn("findSymbolInAllScopes is not guaranteed to find the closest symbol, consider using a different approach if needed.");
     for (const auto& s : symbols) {
         if (s.symbol_name == symbol_name && s.scope_id > max_scope) {
             max_scope = s.scope_id;

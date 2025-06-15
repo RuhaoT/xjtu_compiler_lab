@@ -97,6 +97,8 @@ add_library(syntax_semantic_analyzer_utils STATIC
     src/syntax_semantic_analyzer/symbol_table.cpp
     src/syntax_semantic_analyzer/ast_model.cpp
     src/syntax_semantic_analyzer/syntax_semantic_analyzer.cpp
+    src/syntax_semantic_analyzer/logical_env_simulator.cpp
+    src/syntax_semantic_analyzer/interm_code_generator.cpp
 )
 # require all previous libraries except FSM
 target_link_libraries(syntax_semantic_analyzer_utils PUBLIC

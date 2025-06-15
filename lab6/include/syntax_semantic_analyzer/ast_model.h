@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include "interm_code/interm_code_model.h"
+#include "logical_env_simulator.h"
 #include "symbol_table.h"
 #include "scope_table.h"
 
@@ -113,6 +114,11 @@ struct ASTNodeContent {
     // 将节点转换为字符串表示形式
     virtual std::string to_string() const = 0;
 
+    // 执行中间代码生成
+    virtual void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) = 0;
+
     virtual ~ASTNodeContent() = default; // 虚析构函数，确保派生类正确析构
 };
 
@@ -129,6 +135,10 @@ struct ProgramNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+    void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 
 };
 
@@ -150,6 +160,10 @@ struct DeclListNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+    void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 
 };
 
@@ -173,6 +187,10 @@ struct DeclNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct TypeNode : public ASTNodeContent {
@@ -189,6 +207,10 @@ struct TypeNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct ArgListNode : public ASTNodeContent {
@@ -206,6 +228,10 @@ struct ArgListNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct ArgNode : public ASTNodeContent {
@@ -223,6 +249,10 @@ struct ArgNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct StatListNode : public ASTNodeContent {
@@ -241,6 +271,9 @@ struct StatListNode : public ASTNodeContent {
 
     std::string to_string() const override;
 
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct StatNode : public ASTNodeContent {
@@ -259,6 +292,10 @@ struct StatNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct ExprNode : public ASTNodeContent {
@@ -279,6 +316,10 @@ struct ExprNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct BoolNode : public ASTNodeContent {
@@ -297,6 +338,10 @@ struct BoolNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct RealArgNode : public ASTNodeContent {
@@ -317,6 +362,10 @@ struct RealArgNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 struct RealArgListNode : public ASTNodeContent {
@@ -336,6 +385,10 @@ struct RealArgListNode : public ASTNodeContent {
     void semantic_action(int scope_id, std::shared_ptr<SymbolTable> symbol_table, std::shared_ptr<ScopeTable> scope_table) override;
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 
 };
 
@@ -358,6 +411,10 @@ struct TerminalNode : public ASTNodeContent {
     }
 
     std::string to_string() const override;
+
+        void generate_intermediate_code(
+        LogicalEnvSimulator& simulator
+    ) override;
 };
 
 }
