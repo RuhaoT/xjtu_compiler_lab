@@ -9,6 +9,7 @@
 #include "cfg/cfg_model.h"
 #include "parsing_table/simple_lr_parsing_table_generator.h"
 #include "parsing_table/lr1_parsing_table_generator.h"
+#include "syntax_semantic_analyzer/interm_code_generator.h"
 #include "spdlog/spdlog.h"
 
 // Fixture for SyntaxSemanticAnalyzer tests
@@ -107,7 +108,7 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalSemanticIncorrectMissMa
     }
 }
 
-// test a minimal correst case
+// test a minimal correct case
 TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalCorrect)
 {
     // Create a token loader and load tokens from a file
@@ -139,6 +140,9 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalCorrect)
     ASSERT_FALSE(result.ast_tree.empty());
     // save the AST tree to a file
     visualization_helper::generate_ast_tree_dot_file(result.ast_tree, "integration_minimal_correct_ast_tree_result", true);
+
+    // save the symbol table to a file
+    visualization_helper::pretty_print_symbol_table(result.symbol_table, true, "integration_minimal_correct_symbol_table.md");
 }
 
 // test minima_multifunc_correct case
@@ -209,4 +213,32 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestSimpleCorrect)
     visualization_helper::generate_ast_tree_dot_file(result.ast_tree, "integration_simple_correct_ast_tree_result", true);
     // save the symbol table to a file
     visualization_helper::pretty_print_symbol_table(result.symbol_table, true, "integration_simple_correct_symbol_table.md");
+}
+
+// test generate intermediate code for a minimal correct case
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalCorrectGenerateIntermediateCode)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "minimal_correct_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+
+    // generate intermediate code for the AST tree
+    IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
+    interm_code_generator.produce_intermediate_code("integration_minimal_correct_intermediate_code.txt");
 }

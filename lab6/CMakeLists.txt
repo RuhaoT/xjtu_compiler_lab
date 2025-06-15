@@ -96,6 +96,9 @@ add_library(syntax_semantic_analyzer_utils STATIC
     src/syntax_semantic_analyzer/scope_table.cpp
     src/syntax_semantic_analyzer/symbol_table.cpp
     src/syntax_semantic_analyzer/ast_model.cpp
+    src/syntax_semantic_analyzer/ast_semantic_actions.cpp
+    src/syntax_semantic_analyzer/ast_interm_code_gen.cpp
+    src/syntax_semantic_analyzer/ast_representations.cpp
     src/syntax_semantic_analyzer/syntax_semantic_analyzer.cpp
     src/syntax_semantic_analyzer/logical_env_simulator.cpp
     src/syntax_semantic_analyzer/interm_code_generator.cpp

@@ -64,10 +64,22 @@ public:
     std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> save_scope_state(int scope_id);
     // restore the state of a given scope
     std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> restore_scope_state(int scope_id);
+
+    // generate the header for a function
+    std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> generate_func_header(int arg_count, const std::string &func_label);
+
     // add a new intermediate code batch to the simulator
     void add_intermediate_code_batch(const std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> &interm_code_batch);
     // get the current intermediate code list
     std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> get_intermediate_code_list() const;
+
+    // memory operations
+    int get_stack_usage() const { return stack_usage; }
+    int get_memory_usage() const { return memory_usage; }
+    void allocate_memory(int size) {
+        memory_usage += size;
+        spdlog::debug("Allocated {} memory units, total memory usage: {}", size, memory_usage);
+    }
 };
 
 #endif // !LOGICAL_ENV_SIMULATOR_H

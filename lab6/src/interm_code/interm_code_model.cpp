@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <sstream> // Required for ostringstream
 #include <functional> // Required for std::hash
+#include <iomanip> // Required for std::setw, std::left
 
 namespace interm_code_model
 {
@@ -52,6 +53,8 @@ namespace interm_code_model
             return OperationType::IS_SMALLER;
         if (type == "IS_EQUAL")
             return OperationType::IS_EQUAL;
+        if (type == "EMPTY")
+            return OperationType::EMPTY; // For empty operations, if needed
         throw std::invalid_argument("Unknown OperationType string: " + type);
     }
 
@@ -77,6 +80,8 @@ namespace interm_code_model
             return "IS_SMALLER";
         case OperationType::IS_EQUAL:
             return "IS_EQUAL";
+        case OperationType::EMPTY:
+            return "EMPTY"; // For empty operations, if needed
         default:
             throw std::invalid_argument("Unknown OperationType enum value");
         }
@@ -167,31 +172,35 @@ namespace interm_code_model
     std::string IntermediateCode::toString() const
     {
         std::ostringstream oss;
-        oss << operationTypeToString(type);
-        if (operand_1)
-        {
-            oss << ", " << operand_1.value().toString();
+        oss << std::left; // Align to the left
+
+        // Field 1: Operation Type
+        oss << std::setw(8) << operationTypeToString(type);
+
+        // Field 2: Operand 1
+        std::string op1_str = "-";
+        if (operand_1) {
+            op1_str = operand_1.value().toString();
         }
-        else
-        {
-            oss << ", -";
+        oss << std::setw(10) << op1_str;
+
+        // Field 3: Operand 2
+        std::string op2_str = "-";
+        if (operand_2) {
+            op2_str = operand_2.value().toString();
         }
-        if (operand_2)
-        {
-            oss << ", " << operand_2.value().toString();
+        oss << std::setw(10) << op2_str;
+
+        // Field 4: Operand 3
+        std::string op3_str = "-";
+        if (operand_3) {
+            op3_str = operand_3.value().toString();
         }
-        else
-        {
-            oss << ", -";
-        }
-        if (operand_3)
-        {
-            oss << ", " << operand_3.value().toString();
-        }
-        else
-        {
-            oss << ", -";
-        }
+        oss << std::setw(10) << op3_str;
+
+        // Field 5: Label
+        oss << "label: " << std::setw(10) << (label.has_value() ? label.value() : "-");
+        
         return oss.str();
     }
 

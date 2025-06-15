@@ -13,15 +13,16 @@
 class IntermCodeGenerator {
 public:
     LogicalEnvSimulator logical_env_simulator; // Logical environment simulator
+    tree<std::shared_ptr<ast_model::ASTNodeContent>> current_ast_tree; // Current AST tree being processed
 
 public:
     IntermCodeGenerator() = default;
     IntermCodeGenerator(const SymbolTable& symbol_table, tree<std::shared_ptr<ast_model::ASTNodeContent>> ast_tree);
     
-    void produce_intermediate_code();
+    void produce_intermediate_code(const std::string& output_file = "temp_intermediate_code.txt");
 
     void recursive_iterate_ast_tree(
-        tree<std::shared_ptr<ast_model::ASTNodeContent>>::iterator node
+        tree<std::shared_ptr<ast_model::ASTNodeContent>>::iterator current_node
     );
 };
 

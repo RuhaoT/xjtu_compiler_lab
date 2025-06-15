@@ -40,6 +40,7 @@ namespace interm_code_model
         MUL,
         IS_SMALLER,
         IS_EQUAL,
+        EMPTY,
     };
 
     OperationType stringToOperationType(const std::string &type);

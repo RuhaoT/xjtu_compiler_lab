@@ -17,11 +17,85 @@ void LogicalEnvSimulator::init() {
     scope_arr_reg_map.clear();
     scope_label_map.clear();
     label_to_func_map.clear();
+    total_labels.clear();
     stack_usage = 0;
     memory_usage = 0;
     interm_code_list.clear();
 
-    // TBD
+    // Initialize scope information
+    std::set<int> initial_scope_ids;
+    for (const auto& symbol : symbol_table.symbols) {
+        initial_scope_ids.insert(symbol.scope_id);
+    }
+    // also include the global scope ID -1
+    initial_scope_ids.insert(-1); // Global scope ID
+    scope_ids = std::unordered_set<int>(initial_scope_ids.begin(), initial_scope_ids.end());
+    for (const auto& scope_id : scope_ids) {
+        scope_treg_usage[scope_id] = 0; // Initialize T register usage for each scope
+        scope_var_reg_map[scope_id] = std::unordered_map<std::string, interm_code_model::Register>();
+        scope_arr_reg_map[scope_id] = std::unordered_map<std::string, interm_code_model::Register>(); // Initialize label map for each scope
+        spdlog::debug("Initialized scope ID {} with T register usage 0.", scope_id);
+    }
+
+
+    // 1. Initialize all functions & arguments in the symbol table
+    for (const auto& symbol : symbol_table.symbols) {
+        if (symbol.symbol_type == syntax_semantic_model::SymbolType::Function) {
+            // Register the function label
+            std::string func_label = "L" + symbol.symbol_name; // Example label format
+            register_func_label(symbol.symbol_name, func_label);
+            if (!symbol.direct_child_scope.has_value() || !symbol.arg_list.has_value()) {
+                spdlog::error("Function {} does not have a valid child scope or argument list.", symbol.symbol_name);
+                throw std::runtime_error("Function must have a valid child scope and argument list.");
+            }
+            int sub_scope_id = symbol.direct_child_scope.value();
+            auto args = symbol.arg_list.value();
+            for (const auto& arg : args) {
+                // Register each argument to the corresponding scope and allocate a T register for it
+                interm_code_model::Register arg_reg = get_new_treg(sub_scope_id);
+                // find arg entry in symbol table
+                auto arg_entry = symbol_table.findSymbolInScope(arg, sub_scope_id);
+                if (!arg_entry.has_value()) {
+                    spdlog::error("Argument {} not found in symbol table for function {}", arg, symbol.symbol_name);
+                    throw std::runtime_error("Argument not found in symbol table.");
+                }
+                if (arg_entry->symbol_type == syntax_semantic_model::SymbolType::Variable) {
+                    register_var(arg, sub_scope_id, arg_reg);
+                } else if (arg_entry->symbol_type == syntax_semantic_model::SymbolType::Array) {
+                    register_arr(arg, sub_scope_id, arg_reg);
+                } else {
+                    spdlog::error("Argument {} is not a valid variable or array.", arg);
+                    throw std::runtime_error("Invalid argument type.");
+                }
+            }
+        }
+    }
+
+    // 2. Resgister all normal variables
+    for (const auto& symbol : symbol_table.symbols) {
+        if (symbol.symbol_type == syntax_semantic_model::SymbolType::Variable) {
+            int scope_id = symbol.scope_id;
+            // check if it has been registered in the symbol table, if not, get a new T register for it
+            if (scope_var_reg_map[scope_id].find(symbol.symbol_name) == scope_var_reg_map[scope_id].end()) {
+                interm_code_model::Register var_reg = get_new_treg(scope_id);
+                register_var(symbol.symbol_name, scope_id, var_reg);
+            } else {
+                spdlog::debug("Variable {} already registered in scope ID {}", symbol.symbol_name, scope_id);
+            }
+        }
+        else if (symbol.symbol_type == syntax_semantic_model::SymbolType::Array) {
+            int scope_id = symbol.scope_id;
+            // check if it has been registered in the symbol table, if not, get a new T register for it
+            if (scope_arr_reg_map[scope_id].find(symbol.symbol_name) == scope_arr_reg_map[scope_id].end()) {
+                interm_code_model::Register arr_reg = get_new_treg(scope_id);
+                register_arr(symbol.symbol_name, scope_id, arr_reg);
+            } else {
+                spdlog::debug("Array {} already registered in scope ID {}", symbol.symbol_name, scope_id);
+            }
+        }
+    }
+    // initialization complete
+    spdlog::info("Logical environment simulator initialized with {} scopes.", scope_ids.size());
 }
 
 void LogicalEnvSimulator::check_scope_id(int scope_id) {
@@ -46,7 +120,7 @@ void LogicalEnvSimulator::check_symbol_table_arr(const std::string& arr_name, in
 }
 
 void LogicalEnvSimulator::check_symbol_table_func(const std::string& func_name) {
-    if (!symbol_table.symbolExists(func_name, -1)) { // -1 indicates global scope
+    if (!symbol_table.symbolExists(func_name, 0)) { // -1 indicates global scope
         spdlog::error("Function {} does not exist in any scope.", func_name);
         throw std::runtime_error("Function does not exist.");
     }
@@ -290,6 +364,40 @@ std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> LogicalEnvSimu
     }
     catch (const std::exception& e) {
         spdlog::error("Error restoring scope state for scope ID {}: {}", scope_id, e.what());
+        throw;
+    }
+}
+
+std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> LogicalEnvSimulator::generate_func_header(int arg_count, const std::string &func_label) {
+    try {
+        spdlog::debug("Generating function header for function with label: {} and {} arguments", func_label, arg_count);
+        // Generate the function header code
+        std::vector<std::shared_ptr<interm_code_model::IntermediateCode>> header_codes;
+        // init as empty vector
+        header_codes.clear();
+
+        for (int i = 1; i <= arg_count; ++i) {
+            // Allocate a new T register for each argument
+            interm_code_model::Register arg_reg(interm_code_model::RegisterType::TYPE_T_GENERAL, i);
+            interm_code_model::Register rarg_reg(interm_code_model::RegisterType::TYPE_R_GENERAL, i);
+            // Create the intermediate code for argument assignment
+            auto arg_code = std::make_shared<interm_code_model::IntermediateCode>(
+                interm_code_model::OperationType::ASSIGN, arg_reg, rarg_reg);
+            header_codes.push_back(arg_code);
+            spdlog::debug("Generated function header code for argument {}: {}", i, arg_code->toString());
+        }
+        // !!! ADD a empty code at the start of the header codes, in case the function has no arguments
+        auto empty_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::EMPTY);
+        header_codes.insert(header_codes.begin(), empty_code);
+        spdlog::debug("Added empty code at the start of the function header codes.");
+        // set the label to the first line of the function
+        header_codes[0]->label = func_label;
+        spdlog::debug("Generated function header with label: {}", func_label);
+        return header_codes;
+        
+    } catch (const std::exception& e) {
+        spdlog::error("Error generating function header: {}", e.what());
         throw;
     }
 }
