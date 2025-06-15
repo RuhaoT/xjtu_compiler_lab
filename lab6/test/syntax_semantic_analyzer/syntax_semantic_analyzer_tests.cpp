@@ -242,3 +242,100 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalCorrectGenerateIntermed
     IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
     interm_code_generator.produce_intermediate_code("integration_minimal_correct_intermediate_code.txt");
 }
+
+// test generate intermediate code for a minimal multi-function correct case
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestMinimalMultiFuncCorrectGenerateIntermediateCode)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "minimal_multifunc_correct_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+
+    // generate intermediate code for the AST tree
+    IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
+    interm_code_generator.produce_intermediate_code("integration_minimal_multifunc_correct_intermediate_code.txt");
+}
+
+// test generate intermediate code for a simple correct case
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestSimpleCorrectGenerateIntermediateCode)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "simple_correct_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+
+    // generate intermediate code for the AST tree
+    IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
+    interm_code_generator.produce_intermediate_code("integration_simple_correct_intermediate_code.txt");
+}
+
+// test complicated tokens
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestComplicatedTokens)
+{
+    // Create a token loader and load tokens from a file
+    TokenLoader token_loader;
+    std::string token_file_path = test_data_dir + "complicated_tokens.txt";
+    token_loader.load_from_file(token_file_path);
+
+    // Load semantic information
+    std::string semantic_info_file = cfg_semantic_file;
+    syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+    // Create an instance of SyntaxSemanticAnalyzer
+    SyntaxSemanticAnalyzer analyzer;
+    // Perform analysis
+    analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    auto ast_tree = analyzer.get_blank_ast_tree();
+
+    // Check if the AST tree is not empty
+    ASSERT_FALSE(ast_tree.empty());
+
+    // generate AST tree dot file
+    visualization_helper::generate_ast_tree_dot_file(ast_tree, "integration_complicated_tokens_ast_tree_blank", true);
+
+    // perform syntax and semantic analysis
+    syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+    // Check if the result contains a valid AST tree
+    ASSERT_FALSE(result.ast_tree.empty());
+    // save the AST tree to a file
+    visualization_helper::generate_ast_tree_dot_file(result.ast_tree, "integration_complicated_tokens_ast_tree_result", true);
+
+    // save the symbol table to a file
+    visualization_helper::pretty_print_symbol_table(result.symbol_table, true, "integration_complicated_tokens_symbol_table.md");
+
+    // generate intermediate code for the AST tree
+    IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
+    interm_code_generator.produce_intermediate_code("integration_complicated_tokens_intermediate_code.txt");
+}

@@ -756,6 +756,7 @@ void ast_model::ExprNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
 {
     spdlog::info("Performing semantic action for ExprNode with scope_id: {}", scope_id);
     // Implement semantic actions for ExprNode
+    this->scope_id = scope_id; // Set the scope_id for the expression node
     // 1. check if the expression is a valid variable or array access
     if (subnodes.empty())
     {
@@ -922,13 +923,13 @@ void ast_model::ExprNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
     else if (this->node_type == ASTNodeType::EXPR_PAREN_NOCONST)
     {
         // 12. check if the expression is a valid parenthesized expression
-        if (subnodes.size() != 1)
+        if (subnodes.size() != 3)
         {
             spdlog::error("Parenthesized expression must have exactly one subnode.");
             throw std::runtime_error("Invalid parenthesized expression.");
         }
         // 13. set the data type to the subnode's data type
-        auto sub_expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[0]);
+        auto sub_expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[1]);
         this->data_type = sub_expr_node->data_type;
         this->value = sub_expr_node->value;
         // If the subnode is a constant, set the value to the subnode's value
@@ -972,6 +973,7 @@ void ast_model::BoolNode::semantic_action(int scope_id, std::shared_ptr<SymbolTa
 {
     spdlog::info("Performing semantic action for BoolNode with scope_id: {}", scope_id);
     // Implement semantic actions for BoolNode
+    this->scope_id = scope_id; // Set the scope_id for the boolean node
     // 1. check if the boolean expression is valid
     if (subnodes.empty())
     {
@@ -1017,6 +1019,7 @@ void ast_model::RealArgListNode::semantic_action(int scope_id, std::shared_ptr<S
 {
     spdlog::info("Performing semantic action for RealArgListNode with scope_id: {}", scope_id);
     // Implement semantic actions for RealArgListNode
+    this->scope_id = scope_id; // Set the scope_id for the real argument list node
     if (subnodes.empty())
     {
         spdlog::debug("RealArgListNode has no arguments.");
@@ -1040,6 +1043,7 @@ void ast_model::RealArgNode::semantic_action(int scope_id, std::shared_ptr<Symbo
 {
     spdlog::info("Performing semantic action for RealArgNode with scope_id: {}", scope_id);
     // Implement semantic actions for RealArgNode
+    this->scope_id = scope_id; // Set the scope_id for the real argument node
     // cases
     if (this->node_type == ASTNodeType::RARG_EXPR)
     {

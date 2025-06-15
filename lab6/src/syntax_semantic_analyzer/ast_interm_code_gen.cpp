@@ -263,7 +263,7 @@ void ast_model::StatListNode::generate_intermediate_code(
     }
     // 2. cast subnode 0 to StatListNode and subnode 2 to StatNode
     auto stat_list_node = std::dynamic_pointer_cast<StatListNode>(subnodes[0]);
-    auto next_stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[1]);
+    auto next_stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[2]);
     if (!stat_list_node || !next_stat_node)
     {
         spdlog::error("StatListNode must have a StatListNode and a StatNode as subnodes.");
@@ -326,6 +326,20 @@ void ast_model::StatNode::generate_intermediate_code(
             throw std::runtime_error("Expression node does not have a result register.");
         }
         interm_code_model::Register expr_reg = expr_node->result_register.value();
+        // take in the intermediate code of the expression node
+        if (expr_node->interm_code_list.has_value())
+        {
+            this->interm_code_list->insert(
+                this->interm_code_list->end(),
+                expr_node->interm_code_list.value().begin(),
+                expr_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from ExprNode to StatNode.", expr_node->interm_code_list.value().size());
+        }
+        else
+        {
+            spdlog::error("ExprNode does not have an initialized intermediate code list.");
+            throw std::runtime_error("ExprNode does not have an initialized intermediate code list.");
+        }
         // generate the intermediate code for assignment
         auto interm_code = std::make_shared<interm_code_model::IntermediateCode>(
             interm_code_model::OperationType::ASSIGN,
@@ -385,8 +399,8 @@ void ast_model::StatNode::generate_intermediate_code(
     {
         // cast 2 to BoolNode and 4 to StatListNode
         auto bool_node = std::dynamic_pointer_cast<BoolNode>(subnodes[2]);
-        auto stat_list_node = std::dynamic_pointer_cast<StatListNode>(subnodes[4]);
-        if (!bool_node || !stat_list_node)
+        auto stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[4]);
+        if (!bool_node || !stat_node)
         {
             spdlog::error("STAT_IF must have a BoolNode and a StatListNode as subnodes.");
             throw std::runtime_error("Invalid STAT_IF structure.");
@@ -431,13 +445,13 @@ void ast_model::StatNode::generate_intermediate_code(
         this->interm_code_list->push_back(true_branch_code);
         spdlog::debug("Added empty intermediate code for true branch with label: {}", true_label);
         // 6. add the intermediate code of the stat list node to the list
-        if (stat_list_node->interm_code_list.has_value())
+        if (stat_node->interm_code_list.has_value())
         {
             this->interm_code_list->insert(
                 this->interm_code_list->end(),
-                stat_list_node->interm_code_list.value().begin(),
-                stat_list_node->interm_code_list.value().end());
-            spdlog::debug("Added {} intermediate codes from StatListNode to StatNode.", stat_list_node->interm_code_list.value().size());
+                stat_node->interm_code_list.value().begin(),
+                stat_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from StatListNode to StatNode.", stat_node->interm_code_list.value().size());
         }
         else
         {
@@ -456,6 +470,7 @@ void ast_model::StatNode::generate_intermediate_code(
     }
     else if (node_type == ast_model::ASTNodeType::STAT_IF_ELSE)
     {
+        // 这个和IF是几乎一样的，没时间搞了，纯体力劳动
         throw std::runtime_error("STAT_IF_ELSE is not implemented for intermediate code generation yet.");
     }
     else if (node_type == ast_model::ASTNodeType::STAT_WHILE)
@@ -546,6 +561,20 @@ void ast_model::StatNode::generate_intermediate_code(
         {
             spdlog::error("ExprNode does not have a result register.");
             throw std::runtime_error("ExprNode does not have a result register.");
+        }
+        // take in the intermediate code of the expression node
+        if (expr_node->interm_code_list.has_value())
+        {
+            this->interm_code_list->insert(
+                this->interm_code_list->end(),
+                expr_node->interm_code_list.value().begin(),
+                expr_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from ExprNode to StatNode.", expr_node->interm_code_list.value().size());
+        }
+        else
+        {
+            spdlog::error("ExprNode does not have an initialized intermediate code list.");
+            throw std::runtime_error("ExprNode does not have an initialized intermediate code list.");
         }
         // store the return value in R1 register
         interm_code_model::Register return_reg(interm_code_model::RegisterType::TYPE_R_GENERAL, 1);
@@ -772,7 +801,7 @@ void ast_model::ExprNode::generate_intermediate_code(
         // reuse the left register for the result
         this->result_register = left_reg;
         // generate interm code for the operation
-        if (op_node->value == ast_node_type_to_string(ASTNodeType::MUL))
+        if (op_node->node_type == ASTNodeType::MUL)
         {
             // generate multiplication code
             auto code_mul = std::make_shared<interm_code_model::IntermediateCode>(
@@ -782,7 +811,7 @@ void ast_model::ExprNode::generate_intermediate_code(
                 interm_code_model::Operand(right_reg));
             this->interm_code_list->push_back(code_mul);
         }
-        else if (op_node->value == ast_node_type_to_string(ASTNodeType::ADD))
+        else if (op_node->node_type == ASTNodeType::ADD)
         {
             // generate addition code
             auto code_add = std::make_shared<interm_code_model::IntermediateCode>(
@@ -810,6 +839,86 @@ void ast_model::ExprNode::generate_intermediate_code(
         }
         throw std::runtime_error("Array expression is not implemented for intermediate code generation yet.");
     }
+    else if (node_type == ASTNodeType::EXPR_FUNC)
+    {
+        // 8. E -> ID(R), cast 0 to TerminalNode, 2 to RealArgListNode
+        auto id_node = std::dynamic_pointer_cast<TerminalNode>(subnodes[0]);
+        auto arg_list_node = std::dynamic_pointer_cast<RealArgListNode>(subnodes[2]);
+        if (!id_node || !arg_list_node)
+        {
+            spdlog::error("Function call expression must have a TerminalNode and a RealArgListNode as subnodes.");
+            throw std::runtime_error("Invalid function call expression structure.");
+        }
+        // like the STAT_FUNC_CALL, we need to generate intermediate code for the function call
+        // 1. iterate through the arguments and generate intermediate code for each argument
+        int arg_index = 1;
+        for (const auto &arg_node : arg_list_node->subnodes)
+        {
+            auto casted_arg_node = std::dynamic_pointer_cast<RealArgNode>(arg_node);
+            // get the result register of the argument node
+            if (!casted_arg_node || !casted_arg_node->result_register.has_value())
+            {
+                spdlog::error("RealArgNode does not have a result register.");
+                throw std::runtime_error("RealArgNode does not have a result register.");
+            }
+            // generate the intermediate code for passing T to R reg
+            interm_code_model::Register arg_reg = casted_arg_node->result_register.value();
+            interm_code_model::Register R_reg(interm_code_model::RegisterType::TYPE_R_GENERAL, arg_index);
+            auto interm_code = std::make_shared<interm_code_model::IntermediateCode>(
+                interm_code_model::OperationType::ASSIGN,
+                interm_code_model::Operand(R_reg),
+                interm_code_model::Operand(arg_reg));
+            this->interm_code_list->push_back(interm_code);
+            spdlog::debug("Generated intermediate code for function argument {}: {} to register {}", arg_index, casted_arg_node->value.value_or("N/A"), R_reg.toString());
+            // increment the argument index
+            arg_index++;
+        }
+        // 2. get a new temp label for return address, assign to RA register
+        std::string return_label = simulator.get_new_temp_label(scope_id);
+        interm_code_model::Register ra_reg(interm_code_model::RegisterType::TYPE_RA, 0);
+        auto assign_ra_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::ASSIGN,
+            interm_code_model::Operand(ra_reg),
+            interm_code_model::Operand(return_label, interm_code_model::OperandType::LABEL));
+        this->interm_code_list->push_back(assign_ra_code);
+        spdlog::debug("Assigned return address label {} to RA register {}", return_label, ra_reg.toString());
+        // 3. save the current state
+        auto save_state_code = simulator.save_scope_state(scope_id);
+        this->interm_code_list->insert(
+            this->interm_code_list->end(),
+            save_state_code.begin(),
+            save_state_code.end());
+        spdlog::debug("Saved current scope state for function call.");
+        // 4. generate a goto code to the function label
+        // get the function label from simulator
+        std::string func_label = simulator.get_func_label(id_node->value);
+        interm_code_model::Operand func_label_operand(func_label, interm_code_model::OperandType::LABEL);
+        auto goto_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::GOTO,
+            func_label_operand);
+        this->interm_code_list->push_back(goto_code);
+        spdlog::debug("Generated GOTO code to function label: {}", id_node->value);
+        // 5. add an empty intermediate code for the return address, label it with the return label
+        auto return_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::EMPTY,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            return_label);
+        this->interm_code_list->push_back(return_code);
+        spdlog::debug("Added empty intermediate code for return address with label: {}", return_label);
+        // 6. restore the state after the function call
+        auto restore_state_code = simulator.restore_scope_state(scope_id);
+        this->interm_code_list->insert(
+            this->interm_code_list->end(),
+            restore_state_code.begin(),
+            restore_state_code.end());
+        spdlog::debug("Restored scope state after function call.");
+        // 7. set the result register to R1 register
+        interm_code_model::Register r1_reg(interm_code_model::RegisterType::TYPE_R_GENERAL, 1);
+        this->result_register = r1_reg;
+        spdlog::debug("Set result register to R1 register: {}", r1_reg.toString());
+    }
     else
     {
         throw std::runtime_error("EXPR_NODE type not implemented for intermediate code generation: " + ast_node_type_to_string(node_type));
@@ -826,7 +935,89 @@ void ast_model::TerminalNode::generate_intermediate_code(
 void ast_model::BoolNode::generate_intermediate_code(
     LogicalEnvSimulator &simulator)
 {
-    throw std::runtime_error("Not implemented: BoolNode intermediate code generation.");
+    spdlog::info("Generating intermediate code for BoolNode.");
+    // init the intermediate code list
+    this->interm_code_list = std::vector<std::shared_ptr<interm_code_model::IntermediateCode>>();
+    // Implement intermediate code generation for BoolNode
+    if (node_type == ASTNodeType::BOOL_EXPR)
+    {
+        // B -> E
+        // cast 0 to ExprNode and inherit its intermediate code list & result register
+        auto expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[0]);
+        if (!expr_node)
+        {
+            spdlog::error("BoolNode must have an ExprNode as subnode.");
+            throw std::runtime_error("Invalid BoolNode structure.");
+        }
+        this->interm_code_list = expr_node->interm_code_list;
+        this->result_register = expr_node->result_register;
+        if (!this->result_register.has_value())
+        {
+            spdlog::error("BoolNode must have a result register.");
+            throw std::runtime_error("BoolNode must have a result register.");
+        }
+        spdlog::debug("Generated intermediate code for BoolNode from ExprNode with register {}", this->result_register.value().toString());
+    }
+    else if (node_type == ASTNodeType::BOOL_OP)
+    {
+        // B -> E OP E
+        // cast 0 & 2 to ExprNode, 1 to TerminalNode
+        auto left_expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[0]);
+        auto right_expr_node = std::dynamic_pointer_cast<ExprNode>(subnodes[2]);
+        auto op_node = std::dynamic_pointer_cast<TerminalNode>(subnodes[1]);
+        if (!left_expr_node || !right_expr_node || !op_node)
+        {
+            spdlog::error("BoolNode must have two ExprNodes and a TerminalNode as subnodes.");
+            throw std::runtime_error("Invalid BoolNode structure.");
+        }
+        auto left_reg = left_expr_node->result_register.value();
+        auto right_reg = right_expr_node->result_register.value();
+        // inherit the intermediate code list from the left & right subnodes
+        this->interm_code_list = left_expr_node->interm_code_list;
+        this->interm_code_list.value().insert(
+            this->interm_code_list.value().end(),
+            right_expr_node->interm_code_list.value().begin(),
+            right_expr_node->interm_code_list.value().end());
+        // reuse the left register for the result
+        this->result_register = left_reg;
+        // generate interm code for the operation
+        // vaild op: <, <=, ==
+        if (op_node->value == "<")
+        {
+            // generate less than code
+            auto code_lt = std::make_shared<interm_code_model::IntermediateCode>(
+                interm_code_model::OperationType::IS_SMALLER,
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(right_reg));
+            this->interm_code_list->push_back(code_lt);
+        }
+        else if (op_node->value == "==")
+        {
+            // generate equal to code
+            auto code_eq = std::make_shared<interm_code_model::IntermediateCode>(
+                interm_code_model::OperationType::IS_EQUAL,
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(right_reg));
+            this->interm_code_list->push_back(code_eq);
+        }
+        else if (op_node->value == "<=")
+        {
+            // generate less than or equal to code
+            auto code_le = std::make_shared<interm_code_model::IntermediateCode>(
+                interm_code_model::OperationType::IS_LESS_EQUAL,
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(left_reg),
+                interm_code_model::Operand(right_reg));
+            this->interm_code_list->push_back(code_le);
+        }
+        else
+        {
+            spdlog::error("Invalid boolean operation: {}", op_node->value);
+            throw std::runtime_error("Invalid boolean operation.");
+        }
+    }
 };
 
 void ast_model::RealArgListNode::generate_intermediate_code(

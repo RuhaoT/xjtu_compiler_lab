@@ -59,7 +59,7 @@ std::string ast_model::ExprNode::to_string() const
     std::string s = ast_node_type_to_string(node_type) + "(type=" + data_type;
     if (value.has_value() && value.value() != "")
         s += ", val=" + value.value();
-    s += ")";
+    s += ", scope=" + std::to_string(scope_id) + ")";
     return s;
 }
 
@@ -73,7 +73,7 @@ std::string ast_model::RealArgNode::to_string() const
     std::string s = ast_node_type_to_string(node_type) + "(type=" + data_type;
     if (value.has_value() && value.value() != "")
         s += ", val=" + value.value();
-    s += ")";
+    s += ", scope=" + std::to_string(scope_id) + ")";
     return s;
 }
 

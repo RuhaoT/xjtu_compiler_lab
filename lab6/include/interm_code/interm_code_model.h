@@ -40,6 +40,7 @@ namespace interm_code_model
         MUL,
         IS_SMALLER,
         IS_EQUAL,
+        IS_LESS_EQUAL, // For less than or equal to operation
         EMPTY,
     };
 

@@ -53,6 +53,8 @@ namespace interm_code_model
             return OperationType::IS_SMALLER;
         if (type == "IS_EQUAL")
             return OperationType::IS_EQUAL;
+        if (type == "IS_LESS_EQUAL")
+            return OperationType::IS_LESS_EQUAL; // For less than or equal to operation
         if (type == "EMPTY")
             return OperationType::EMPTY; // For empty operations, if needed
         throw std::invalid_argument("Unknown OperationType string: " + type);
@@ -80,6 +82,8 @@ namespace interm_code_model
             return "IS_SMALLER";
         case OperationType::IS_EQUAL:
             return "IS_EQUAL";
+        case OperationType::IS_LESS_EQUAL:
+            return "IS_LESS_EQUAL"; // For less than or equal to operation
         case OperationType::EMPTY:
             return "EMPTY"; // For empty operations, if needed
         default:

@@ -451,10 +451,11 @@ void SyntaxSemanticAnalyzer::recursive_iterate_ast_tree(
     }
 
     // after all children are processed, perform the semantic action for the current node
-    // !!! IF THIS IS A LEAF NODE, IT MEANS THIS IS A TERMINAL NODE, AND WE SHOULD NOT CALL THE SEMANTIC ACTION
+    // The below comment is WRONG:
+    // "IF THIS IS A LEAF NODE, IT MEANS THIS IS A TERMINAL NODE, AND WE SHOULD NOT CALL THE SEMANTIC ACTION" <-- this statement is not true, because nodes with epsilon productions are also leaf nodes, and they should not call the semantic action
     if (children == 0) {
-        spdlog::debug("Current node is a leaf node, skipping semantic action.");
-        return;
+        spdlog::debug("Current node is a leaf node.");
+        // perform semantic action for leaf nodes
     }
     // 1. subnode takein 2. semantic action
     // take in the subnodes for the current node

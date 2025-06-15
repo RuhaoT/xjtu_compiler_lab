@@ -26,6 +26,10 @@ void LogicalEnvSimulator::init() {
     std::set<int> initial_scope_ids;
     for (const auto& symbol : symbol_table.symbols) {
         initial_scope_ids.insert(symbol.scope_id);
+        // if function, also add sub scope ID
+        if (symbol.symbol_type == syntax_semantic_model::SymbolType::Function && symbol.direct_child_scope.has_value()) {
+            initial_scope_ids.insert(symbol.direct_child_scope.value());
+        }
     }
     // also include the global scope ID -1
     initial_scope_ids.insert(-1); // Global scope ID
