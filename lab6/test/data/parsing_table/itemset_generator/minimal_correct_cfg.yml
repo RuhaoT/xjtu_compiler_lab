@@ -1,0 +1,20 @@
+# S' -> X
+# X -> (X)
+# X -> ()
+cfg:
+  terminals:
+  - "("
+  - ")"
+  non_terminals:
+  - "X"
+  initial_symbol: "X"
+  production_rules:
+  - lhs: "X"
+    rhs:
+    - "("
+    - "X"
+    - ")"
+  - lhs: "X"
+    rhs:
+    - "("
+    - ")"

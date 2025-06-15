@@ -1,0 +1,43 @@
+# S' -> Func
+# Func -> id ( R' )
+# R' -> ε | R' R ,
+# R -> E | id ( ) 
+# E -> int | Func
+cfg:
+  terminals:
+  - "id"
+  - "int"
+  - ","
+  - "("
+  - ")"
+  non_terminals:
+  - "Func"
+  - "R'"
+  - "R"
+  - "E"
+  initial_symbol: "Func"
+  production_rules:
+  - lhs: "Func"
+    rhs:
+    - "id"
+    - "("
+    - "R'"
+    - ")"
+  - lhs: "R'"
+    rhs:
+    - "R'"
+    - "R"
+    - ","
+  - lhs: "R'"
+    rhs:
+    - ""
+  - lhs: "R"
+    rhs:
+    - "E"
+  - lhs: "E"
+    rhs:
+    - "int"
+  - lhs: "E"
+    rhs:
+    - "Func"
+

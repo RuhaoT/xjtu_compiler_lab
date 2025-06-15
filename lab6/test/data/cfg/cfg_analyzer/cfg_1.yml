@@ -1,0 +1,102 @@
+# E -> T E'
+# E' -> + T E' | ε
+# T -> F T'
+# T' -> * F T' | ε
+# F -> ( E ) | id
+cfg:
+  terminals:
+  - "id"
+  - "*"
+  - "("
+  - ")"
+  - "+"
+  non_terminals:
+  - "E"
+  - "E'"
+  - "T"
+  - "T'"
+  - "F"
+  initial_symbol: "E"
+  production_rules:
+  - lhs: "E"
+    rhs:
+    - "T"
+    - "E'"
+  - lhs: "E'"
+    rhs:
+    - "+"
+    - "T"
+    - "E'"
+  - lhs: "E'"
+    rhs:
+    - "" # empty string represents epsilon
+  - lhs: "T"
+    rhs:
+    - "F"
+    - "T'"
+  - lhs: "T'"
+    rhs:
+    - "*"
+    - "F"
+    - "T'"
+  - lhs: "T'"
+    rhs:
+    - "" # empty string represents epsilon
+  - lhs: "F"
+    rhs:
+    - "("
+    - "E"
+    - ")"
+  - lhs: "F"
+    rhs:
+    - "id"
+
+expected_first_sets:
+- symbol: "E"
+  first_set:
+  - "("
+  - "id"
+- symbol: "E'"
+  first_set:
+  - "+"
+  - "" # empty string represents epsilon
+- symbol: "T"
+  first_set:
+  - "("
+  - "id"
+- symbol: "T'"
+  first_set:
+  - "*"
+  - "" # empty string represents epsilon
+- symbol: "F"
+  first_set:
+  - "("
+  - "id"
+
+end_of_input: "$"
+
+expected_follow_sets:
+- symbol: "E"
+  follow_set:
+  - "$" # end of input
+  - ")"
+- symbol: "E'"
+  follow_set:
+  - "$" # end of input
+  - ")"
+- symbol: "T"
+  follow_set:
+  - "$" # end of input
+  - "+"
+  - ")"
+- symbol: "T'"
+  follow_set:
+  - "$" # end of input
+  - "+"
+  - ")"
+- symbol: "F"
+  follow_set:
+  - "$" # end of input
+  - "+"
+  - "*"
+  - ")"

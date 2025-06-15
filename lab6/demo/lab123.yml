@@ -1,0 +1,61 @@
+# S' -> X
+# X -> (X)
+# X -> ()
+cfg:
+  terminals:
+  - "LPA"
+  - "RPA"
+  non_terminals:
+  - "X"
+  initial_symbol: "X"
+  production_rules:
+  - lhs: "X"
+    rhs:
+    - "LPA"
+    - "X"
+    - "RPA"
+  - lhs: "X"
+    rhs:
+    - "LPA"
+    - "RPA"
+
+token_types:
+- name: "LPA"
+  priority: 11
+  has_content: false
+- name: "RPA"
+  priority: 12
+  has_content: false
+
+dfas:
+- name: "LPA"
+  character_set: "\\("
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: "("
+
+- name: "RPA"
+  character_set: "\\)"
+  states_set: [ "q0", "q1", "q2" ]
+  initial_state: "q0"
+  accepting_states: [ "q2" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: "\\"
+  - from: "q1"
+    to: "q2"
+    character: ")"
+
+regexps:
+- regexp: "^\\\\\\($"
+  token_type: "LPA"
+- regexp: "^\\\\\\)$"
+  token_type: "RPA"

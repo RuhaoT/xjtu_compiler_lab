@@ -1,0 +1,308 @@
+# P -> D' S'
+# D' -> ε | D' D SCO
+# D -> T ID | T ID LBK NUM RBK  | T ID LPA A' RPA LBR D' S' RBR 
+# T -> INT | FLOAT | VOID
+# A' -> ε | A' A SCO
+# A -> T ID | T ID LBK  RBK  | T ID LPA T RPA 
+# S' -> S | S' SCO S
+# S -> ID ASG E | ID LBK E RBK  ASG E | IF LPA B RPA S | IF  LPA B RPA  S ELSE S | WHILE  LPA B RPA  S | RETURN E |  LBR S' RBR  | ID LPA R' RPA 
+# E -> E ADD E_MUL | E_MUL
+# E_MUL -> E_MUL MUL E_ATOMIC | E_ATOMIC
+# E_ATOMIC -> NUM | FLO | ID | ID LBK E RBK  |  LPA E RPA  | ID LPA R' RPA
+# B -> E ROP E | E
+# R' -> ε | R' R CMA
+# R -> E | ID LBK  RBK
+# -----NOTE-----
+# LPA : (
+# RPA : )
+# LBK : [
+# RBK : ]
+# LBR : {
+# RBR : }
+# SCO : ;
+# CMA : ,
+# ASG : =
+# ADD : +
+# MUL : *
+# ----- NOTE ----
+cfg:
+  terminals:
+  - "ID"
+  - "NUM"
+  - "FLO"
+  - "ADD"
+  - "MUL"
+  - "ROP"
+  - "ASG"
+  - "LPA"
+  - "RPA"
+  - "LBK"
+  - "RBK"
+  - "LBR"
+  - "RBR"
+  - "CMA"
+  - "SCO"
+  - "INT"
+  - "FLOAT"
+  - "VOID"
+  - "IF"
+  - "ELSE"
+  - "WHILE"
+  - "RETURN"
+  non_terminals:
+  - "P"
+  - "D'"
+  - "D"
+  - "T"
+  - "A'"
+  - "A"
+  - "S'"
+  - "S"
+  - "E"
+  - "E_MUL"
+  - "E_ATOMIC"
+  - "B"
+  - "R'"
+  - "R"
+  initial_symbol: "P"
+  production_rules:
+  - lhs: "P"
+    rhs:
+    - "D'"
+    - "S'"
+    node_type: "PROGRAM"
+  - lhs: "D'"
+    rhs:
+    - "" # epsilon
+    node_type: "DECL_LIST"
+  - lhs: "D'"
+    rhs:
+    - "D'"
+    - "D"
+    - "SCO"
+    node_type: "DECL_LIST"
+  - lhs: "D"
+    rhs:
+    - "T"
+    - "ID"
+    node_type: "DECL_VAR"
+  - lhs: "D"
+    rhs:
+    - "T"
+    - "ID"
+    - "LBK"
+    - "NUM"
+    - "RBK"
+    node_type: "DECL_ARRAY"
+  - lhs: "D"
+    rhs:
+    - "T"
+    - "ID"
+    - "LPA"
+    - "A'"
+    - "RPA"
+    - "LBR"
+    - "D'"
+    - "S'"
+    - "RBR"
+    node_type: "DECL_FUNC"
+  - lhs: "T"
+    rhs:
+    - "INT"
+    node_type: "TYPE"
+  - lhs: "T"
+    rhs:
+    - "FLOAT"
+    node_type: "TYPE"
+  - lhs: "T"
+    rhs:
+    - "VOID"
+    node_type: "TYPE"
+  - lhs: "A'"
+    rhs:
+    - "" # epsilon
+    node_type: "ARG_LIST"
+  - lhs: "A'"
+    rhs:
+    - "A'"
+    - "A"
+    - "SCO"
+    node_type: "ARG_LIST"
+  - lhs: "A"
+    rhs:
+    - "T"
+    - "ID"
+    node_type: "ARG_VAR"
+  - lhs: "A"
+    rhs:
+    - "T"
+    - "ID"
+    - "LBK"
+    - "RBK"
+    node_type: "ARG_ARRAY"
+  - lhs: "A"
+    rhs:
+    - "T"
+    - "ID"
+    - "LPA"
+    - "T"
+    - "RPA"
+    node_type: "ARG_FUNC"
+  - lhs: "S'"
+    rhs:
+    - "S"
+    node_type: "STAT_LIST"
+  - lhs: "S'"
+    rhs:
+    - "S'"
+    - "SCO"
+    - "S"
+    node_type: "STAT_LIST"
+  - lhs: "S"
+    rhs:
+    - "ID"
+    - "ASG"
+    - "E"
+    node_type: "STAT_ASSIGN"
+  - lhs: "S"
+    rhs:
+    - "ID"
+    - "LBK"
+    - "E"
+    - "RBK"
+    - "ASG"
+    - "E"
+    node_type: "STAT_ARRAY_ASSIGN"
+  - lhs: "S"
+    rhs:
+    - "IF"
+    - "LPA"
+    - "B"
+    - "RPA"
+    - "S"
+    node_type: "STAT_IF"
+  - lhs: "S"
+    rhs:
+    - "IF"
+    - "LPA"
+    - "B"
+    - "RPA"
+    - "S"
+    - "ELSE"
+    - "S"
+    node_type: "STAT_IF_ELSE"
+  - lhs: "S"
+    rhs:
+    - "WHILE"
+    - "LPA"
+    - "B"
+    - "RPA"
+    - "S"
+    node_type: "STAT_WHILE"
+  - lhs: "S"
+    rhs:
+    - "RETURN"
+    - "E"
+    node_type: "STAT_RETURN"
+  - lhs: "S"
+    rhs:
+    - "LBR"
+    - "S'"
+    - "RBR"
+    node_type: "STAT_COMPOUND"
+  - lhs: "S"
+    rhs:
+    - "ID"
+    - "LPA"
+    - "R'"
+    - "RPA"
+    node_type: "STAT_FUNC_CALL"
+  - lhs: "E"
+    rhs:
+    - "E"
+    - "ADD"
+    - "E_MUL"
+    node_type: "EXPR_ARITH_NOCONST"
+  - lhs: "E"
+    rhs:
+    - "E_MUL"
+    node_type: "EXPR_MUL_TEMP"
+  - lhs: "E_MUL"
+    rhs:
+    - "E_MUL"
+    - "MUL"
+    - "E_ATOMIC"
+    node_type: "EXPR_ARITH_NOCONST"
+  - lhs: "E_MUL"
+    rhs:
+    - "E_ATOMIC"
+    node_type: "EXPR_ATOMIC_TEMP"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "NUM"
+    node_type: "EXPR_CONST"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "FLO"
+    node_type: "EXPR_CONST"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "ID"
+    node_type: "EXPR_VAR"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "ID"
+    - "LBK"
+    - "E"
+    - "RBK"
+    node_type: "EXPR_ARRAY"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "LPA"
+    - "E"
+    - "RPA"
+    node_type: "EXPR_PAREN_NOCONST"
+  - lhs: "E_ATOMIC"
+    rhs:
+    - "ID"
+    - "LPA"
+    - "R'"
+    - "RPA"
+    node_type: "EXPR_FUNC"
+  - lhs: "B"
+    rhs:
+    - "E"
+    - "ROP"
+    - "E"
+    node_type: "BOOL_OP"
+  - lhs: "B"
+    rhs:
+    - "E"
+    node_type: "BOOL_EXPR"
+  - lhs: "R'"
+    rhs:
+    - "" # epsilon
+    node_type: "RARG_LIST"
+  - lhs: "R'"
+    rhs:
+    - "R'"
+    - "R"
+    - "CMA"
+    node_type: "RARG_LIST"
+  - lhs: "R"
+    rhs:
+    - "E"
+    node_type: "RARG_EXPR"
+  - lhs: "R"
+    rhs:
+    - "ID"
+    - "LBK"
+    - "RBK"
+    node_type: "RARG_ARRAY"
+  # - lhs: "R"
+  #   rhs:
+  #   - "ID"
+  #   - "LPA"
+  #   - "RPA"
+  #   node_type: "RARG_FUNC"
+

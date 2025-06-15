@@ -1,0 +1,44 @@
+vars: &vars
+  - var_a_to_z: &var_a_to_z "abcdefghijklmnopqrstuvwxyz"
+  - var_A_to_Z: &var_A_to_Z "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  - var_0_to_9: &var_0_to_9 "0123456789"
+  - var_id_char: &var_id_char "abcdefghijklmnopqrstuvwxyz0123456789"
+  - var_num_char: &var_num_char "0123456789+-"
+  - var_float_char: &var_float_char "0123456789+-."
+
+test_cases:
+  acceptable:
+  - "a"
+  - "z"
+  - "word"
+  - "v1"
+  - "identifier123"
+  - "a0b1c2"
+  - "lowercase"
+  unacceptable:
+  - "1a"
+  - "_var"
+  - "$temp"
+  - "Word"
+  - "ABC"
+  - "var_1"
+  - "test-case"
+  - "aBc"
+  - "123"
+
+dfas:
+- name: "ID"
+  character_set: *var_id_char
+  states_set: [ "q0", "q1" ]
+  initial_state: "q0"
+  accepting_states: [ "q1" ]
+  transitions:
+  - from: "q0"
+    to: "q1"
+    character: *var_a_to_z
+  - from: "q1"
+    to: "q1"
+    character: *var_0_to_9
+  - from: "q1"
+    to: "q1"
+    character: *var_a_to_z
