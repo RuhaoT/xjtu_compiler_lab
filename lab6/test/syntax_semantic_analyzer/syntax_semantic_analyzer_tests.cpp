@@ -339,3 +339,55 @@ TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestComplicatedTokens)
     IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
     interm_code_generator.produce_intermediate_code("integration_complicated_tokens_intermediate_code.txt");
 }
+
+// test all txt file start with hw_8_, these are even more complicated correct cases
+TEST_F(SyntaxSemanticAnalyzerTest, IntegrationTestHw8ComplicatedTokens)
+{
+    // obtain all files in the test data directory with prefix hw_8_
+    std::vector<std::string> hw_8_files = get_dir_file_with_prefix(test_data_dir, "hw_8_");
+    // iterate through all files
+    for (const auto &file_path : hw_8_files)
+    {
+        spdlog::info("Processing file: {}", file_path);
+        // Create a token loader and load tokens from the file
+        TokenLoader token_loader;
+        token_loader.load_from_file(file_path);
+
+        // Load semantic information
+        std::string semantic_info_file = cfg_semantic_file;
+        syntax_semantic_model::ProductionInfoMapping production_info_mapping = load_semantic_info(semantic_info_file, cfg);
+
+        // Create an instance of SyntaxSemanticAnalyzer
+        SyntaxSemanticAnalyzer analyzer;
+        // Perform analysis
+        analyzer.prepair_new_analysis(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+        auto ast_tree = analyzer.get_blank_ast_tree();
+
+        // Check if the AST tree is not empty
+        ASSERT_FALSE(ast_tree.empty());
+
+        // generate AST tree dot file
+        std::string ast_tree_file_name = "integration_" + get_base_name_without_extension(file_path) + "_ast_tree_blank";
+        visualization_helper::generate_ast_tree_dot_file(ast_tree, ast_tree_file_name, true);
+
+        // perform syntax and semantic analysis
+        syntax_semantic_analyzer::analysis_result result = analyzer.analyze_syntax_semantics(lr1_parsing_table, production_info_mapping, token_loader.get_tokens());
+
+        // Check if the result contains a valid AST tree
+        ASSERT_FALSE(result.ast_tree.empty());
+
+        // save the symbol table to a file
+        std::string symbol_table_file_name = "integration_" + get_base_name_without_extension(file_path) + "_symbol_table.md";
+        visualization_helper::pretty_print_symbol_table(result.symbol_table, true, symbol_table_file_name);
+
+        // generate intermediate code for the AST tree
+        IntermCodeGenerator interm_code_generator(result.symbol_table, result.ast_tree);
+        interm_code_generator.produce_intermediate_code("integration_" + get_base_name_without_extension(file_path) + "_intermediate_code.txt");
+
+        // save the final AST tree to a file
+        std::string ast_tree_result_file_name = "integration_" + get_base_name_without_extension(file_path) + "_ast_tree_result";
+        visualization_helper::generate_ast_tree_dot_file(result.ast_tree, ast_tree_result_file_name, true);
+    }
+
+}

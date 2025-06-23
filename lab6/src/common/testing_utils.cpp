@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <filesystem>
 
 // register the global environment
 std::shared_ptr<spdlog::logger> LoggingEnvironment::logger = nullptr;
@@ -125,4 +126,29 @@ lr_parsing_model::ItemSet generate_test_itemset(const std::string &cfg_file_path
         throw std::runtime_error(error_message);
     }
     
+}
+
+std::vector<std::string> get_dir_file_with_prefix(const std::string &dir, const std::string &prefix)
+{
+    std::vector<std::string> files;
+    for (const auto &entry : std::filesystem::directory_iterator(dir))
+    {
+        if (entry.is_regular_file() && entry.path().filename().string().find(prefix) == 0)
+        {
+            files.push_back(entry.path().string());
+        }
+    }
+    return files;
+}
+
+// get the base name of a file from its path
+std::string get_file_name(const std::string &file_path)
+{
+    return std::filesystem::path(file_path).filename().string();
+}
+
+// get the base name without extension of a file from its path
+std::string get_base_name_without_extension(const std::string &file_path)
+{
+    return std::filesystem::path(file_path).stem().string();
 }

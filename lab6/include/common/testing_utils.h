@@ -28,3 +28,9 @@ class LoggingEnvironment : public ::testing::Environment
 public:
     static std::shared_ptr<spdlog::logger> logger;
 };
+
+std::vector<std::string> get_dir_file_with_prefix(const std::string &dir, const std::string &prefix);
+
+std::string get_file_name(const std::string &file_path);
+
+std::string get_base_name_without_extension(const std::string &file_path);

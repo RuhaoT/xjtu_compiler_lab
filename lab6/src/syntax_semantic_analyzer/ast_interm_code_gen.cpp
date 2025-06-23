@@ -470,17 +470,115 @@ void ast_model::StatNode::generate_intermediate_code(
     }
     else if (node_type == ast_model::ASTNodeType::STAT_IF_ELSE)
     {
-        // 这个和IF是几乎一样的，没时间搞了，纯体力劳动
-        throw std::runtime_error("STAT_IF_ELSE is not implemented for intermediate code generation yet.");
+        // pretty much the same as STAT_IF, but with an else branch(an extra label and goto code)
+        // cast 2 to BoolNode, 4 to StatListNode for true branch, and 6 to StatListNode for false branch
+        auto bool_node = std::dynamic_pointer_cast<BoolNode>(subnodes[2]);
+        auto true_stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[4]);
+        auto false_stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[6]);
+        if (!bool_node || !true_stat_node || !false_stat_node)
+        {
+            spdlog::error("STAT_IF_ELSE must have a BoolNode, a StatNode for true branch, and a StatNode for false branch as subnodes.");
+            throw std::runtime_error("Invalid STAT_IF_ELSE structure.");
+        }
+        // 1. add the intermediate code for the boolean expression to the list
+        if (!bool_node->result_register.has_value())
+        {
+            spdlog::error("BoolNode does not have a result register.");
+            throw std::runtime_error("BoolNode does not have a result register.");
+        }
+        interm_code_model::Register bool_reg = bool_node->result_register.value();
+        this->interm_code_list->insert(
+            this->interm_code_list->end(),
+            bool_node->interm_code_list.value().begin(),
+            bool_node->interm_code_list.value().end());
+        spdlog::debug("Added {} intermediate codes from BoolNode to StatNode.", bool_node->interm_code_list.value().size());
+        // 2. get 3 new labels: one for the true branch, one for the false branch, and one for the end of the if statement
+        std::string true_label = simulator.get_new_temp_label(scope_id);
+        std::string false_label = simulator.get_new_temp_label(scope_id);
+        std::string end_label = simulator.get_new_temp_label(scope_id);
+        // 3. generate a goto_if code, destination is the true label, criteria is the boolean expression result register
+        auto goto_if_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::GOTO_IF,
+            interm_code_model::Operand(bool_reg),
+            interm_code_model::Operand(true_label, interm_code_model::OperandType::LABEL));
+        this->interm_code_list->push_back(goto_if_code);
+        spdlog::debug("Generated GOTO_IF code for STAT_IF_ELSE with label: {}", true_label);
+        // 4. generate a goto code to the false label(this is to skip the true branch)
+        auto goto_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::GOTO,
+            interm_code_model::Operand(false_label, interm_code_model::OperandType::LABEL));
+        this->interm_code_list->push_back(goto_code);
+        spdlog::debug("Generated GOTO code to false label: {}", false_label);
+        // 5. add an empty intermediate code for the true branch, label it with the true label
+        auto true_branch_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::EMPTY,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            true_label);
+        this->interm_code_list->push_back(true_branch_code);
+        spdlog::debug("Added empty intermediate code for true branch with label: {}", true_label);
+        // 6. add the intermediate code of the true stat node to the list
+        if (true_stat_node->interm_code_list.has_value())
+        {
+            this->interm_code_list->insert(
+                this->interm_code_list->end(),
+                true_stat_node->interm_code_list.value().begin(),
+                true_stat_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from true StatNode to StatNode.", true_stat_node->interm_code_list.value().size());
+        }
+        else
+        {
+            spdlog::error("True StatNode does not have an initialized intermediate code list.");
+            throw std::runtime_error("True StatNode does not have an initialized intermediate code list.");
+        }
+        // 7. !!! generate a goto code to the end label(this is to skip the false branch)
+        auto goto_end_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::GOTO,
+            interm_code_model::Operand(end_label, interm_code_model::OperandType::LABEL));
+        this->interm_code_list->push_back(goto_end_code);
+        spdlog::debug("Generated GOTO code to end label: {}", end_label);
+        // 8. add an empty intermediate code for the false branch, label it with the false label
+        auto false_branch_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::EMPTY,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            false_label);
+        this->interm_code_list->push_back(false_branch_code);
+        spdlog::debug("Added empty intermediate code for false branch with label: {}", false_label);
+        // 9. add the intermediate code of the false stat node to the list
+        if (false_stat_node->interm_code_list.has_value())
+        {
+            this->interm_code_list->insert(
+                this->interm_code_list->end(),
+                false_stat_node->interm_code_list.value().begin(),
+                false_stat_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from false StatNode to StatNode.", false_stat_node->interm_code_list.value().size());
+        }
+        else
+        {
+            spdlog::error("False StatNode does not have an initialized intermediate code list.");
+            throw std::runtime_error("False StatNode does not have an initialized intermediate code list.");
+        }
+        // 10. add an empty intermediate code for the end of the if statement, label it with the end label
+        auto end_branch_code = std::make_shared<interm_code_model::IntermediateCode>(
+            interm_code_model::OperationType::EMPTY,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            end_label);
+        this->interm_code_list->push_back(end_branch_code);
+        spdlog::debug("Added empty intermediate code for end of STAT_IF_ELSE with label: {}", end_label);
     }
     else if (node_type == ast_model::ASTNodeType::STAT_WHILE)
     {
         // cast 2 to BoolNode and 4 to StatListNode
         auto bool_node = std::dynamic_pointer_cast<BoolNode>(subnodes[2]);
-        auto stat_list_node = std::dynamic_pointer_cast<StatListNode>(subnodes[4]);
-        if (!bool_node || !stat_list_node)
+        auto stat_node = std::dynamic_pointer_cast<StatNode>(subnodes[4]);
+        if (!bool_node || !stat_node)
         {
-            spdlog::error("STAT_WHILE must have a BoolNode and a StatListNode as subnodes.");
+            spdlog::error("STAT_WHILE must have a BoolNode and a StatNode as subnodes.");
             throw std::runtime_error("Invalid STAT_WHILE structure.");
         }
         // 1. add the intermediate code for the boolean expression to the list
@@ -524,13 +622,13 @@ void ast_model::StatNode::generate_intermediate_code(
         this->interm_code_list->push_back(loop_start_code);
         spdlog::debug("Added empty intermediate code for start of loop with label: {}", loop_start_label);
         // 6. add the intermediate code of the stat list node to the list
-        if (stat_list_node->interm_code_list.has_value())
+        if (stat_node->interm_code_list.has_value())
         {
             this->interm_code_list->insert(
                 this->interm_code_list->end(),
-                stat_list_node->interm_code_list.value().begin(),
-                stat_list_node->interm_code_list.value().end());
-            spdlog::debug("Added {} intermediate codes from StatListNode to StatNode.", stat_list_node->interm_code_list.value().size());
+                stat_node->interm_code_list.value().begin(),
+                stat_node->interm_code_list.value().end());
+            spdlog::debug("Added {} intermediate codes from StatListNode to StatNode.", stat_node->interm_code_list.value().size());
         }
         else
         {
